@@ -19,19 +19,32 @@
           <div
             class="flex flex-col space-y-3 md:space-y-2 lg:space-y-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-3"
           >
-            <div class="flex items-center space-x-2 min-w-0">
-              <label class="text-sm font-medium text-gray-700 whitespace-nowrap"
-                >类目：</label
-              >
-              <select
-                v-model="filterCategoryId"
-                class="flex-1 sm:flex-none min-w-0 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-2 sm:px-3 py-2 border"
-              >
-                <option :value="null">全部</option>
-                <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                  {{ cat.name }}
-                </option>
-              </select>
+            <div class="flex flex-col space-y-2 min-w-0 w-full lg:w-auto">
+              <div class="flex items-center space-x-2 min-w-0">
+                <label class="text-sm font-medium text-gray-700 whitespace-nowrap"
+                  >类目：</label
+                >
+                <select
+                  v-model="filterCategoryId"
+                  class="flex-1 sm:flex-none min-w-0 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-2 sm:px-3 py-2 border"
+                >
+                  <option :value="null">全部</option>
+                  <option v-for="cat in filteredCategoriesForDisplay" :key="cat.id" :value="cat.id">
+                    {{ cat.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="flex items-center space-x-2 min-w-0">
+                <label class="text-sm font-medium text-gray-700 whitespace-nowrap"
+                  >搜索：</label
+                >
+                <input
+                  v-model="categorySearchQuery"
+                  type="text"
+                  placeholder="搜索类目..."
+                  class="flex-1 sm:flex-none min-w-0 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-2 sm:px-3 py-2 border"
+                />
+              </div>
             </div>
             <div class="flex items-center space-x-2 min-w-0">
               <label class="text-sm font-medium text-gray-700 whitespace-nowrap"
@@ -638,6 +651,7 @@ const modalKey = ref(0); // 用于强制重渲染弹窗
 const filterCategoryId = ref<number | null>(null);
 const filterLocationId = ref<number | null>(null);
 const filterDrawerId = ref<number | null>(null);
+const categorySearchQuery = ref<string>(""); // 类目搜索关键词
 const sortKey = ref<string>("name");
 const sortOrder = ref<number>(1); // 1 asc, -1 desc
 const viewMode = ref<"list" | "grid">("list");
@@ -695,6 +709,23 @@ watch(() => form.drawer_id, (newDrawerId: number | null) => {
       form.location_id = selectedDrawer.location_id;
     }
   }
+});
+
+// 计算只包含已有物品的类目（去重）
+const categoriesWithItems = computed(() => {
+  const categoryIds = new Set(items.value.map((item) => item.item_category_id).filter(Boolean));
+  return categories.value.filter((cat) => categoryIds.has(cat.id));
+});
+
+// 根据搜索关键词过滤类目
+const filteredCategoriesForDisplay = computed(() => {
+  const query = categorySearchQuery.value.toLowerCase().trim();
+  if (!query) {
+    return categoriesWithItems.value;
+  }
+  return categoriesWithItems.value.filter((cat) =>
+    cat.name.toLowerCase().includes(query)
+  );
 });
 
 // 筛选和排序逻辑
