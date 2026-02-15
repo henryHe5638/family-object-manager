@@ -3,7 +3,7 @@ import { upload } from '../middleware/upload';
 import { authMiddleware } from '../middleware/auth';
 import fs from 'fs';
 
-const router = Router();
+const router: Router = Router();
 
 // 单个文件上传
 router.post('/image', authMiddleware, upload.single('image'), (req: Request, res: Response) => {

@@ -6,7 +6,7 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 
-const router = Router();
+const router: Router = Router();
 
 // 配置数据库文件上传
 const uploadDir = path.join(__dirname, '../../uploads');

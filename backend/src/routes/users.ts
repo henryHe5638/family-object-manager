@@ -6,7 +6,7 @@ import { authMiddleware } from '../middleware/auth';
 import { adminOnly } from '../middleware/adminCheck';
 import { encryptPassword } from '../utils/crypto';
 
-const router = Router();
+const router: Router = Router();
 
 // 用户注册
 router.post('/register', async (req, res) => {

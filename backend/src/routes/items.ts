@@ -3,7 +3,7 @@ import QRCode from 'qrcode';
 import db from '../database';
 import { authMiddleware } from '../middleware/auth';
 
-const router = Router();
+const router: Router = Router();
 
 router.use(authMiddleware);
 

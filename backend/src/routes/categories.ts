@@ -3,7 +3,7 @@ import db from '../database';
 import { authMiddleware } from '../middleware/auth';
 import { adminOnly } from '../middleware/adminCheck';
 
-const router = Router();
+const router: Router = Router();
 
 router.use(authMiddleware);
 

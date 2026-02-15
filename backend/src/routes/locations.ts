@@ -3,7 +3,7 @@ import db from '../database';
 import { authMiddleware } from '../middleware/auth';
 import { adminOnly } from '../middleware/adminCheck';
 
-const router = Router();
+const router: Router = Router();
 
 // 所有路由都需要认证
 router.use(authMiddleware);

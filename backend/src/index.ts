@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -16,7 +16,7 @@ import uploadRouter from './routes/upload';
 // 加载环境变量
 dotenv.config();
 
-const app = express();
+const app: Application = express();
 const PORT = Number(process.env.PORT) || 3000;
 
 // 中间件
