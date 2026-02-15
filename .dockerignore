@@ -1,0 +1,58 @@
+# 依赖目录
+node_modules/
+*/node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# 构建产物
+dist/
+build/
+*/dist/
+*/build/
+
+# 开发工具
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 数据库
+*.db
+*.sqlite
+database.sqlite
+*.db-journal
+
+# 上传文件
+uploads/
+*/uploads/
+
+# 日志
+logs/
+*.log
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# 文档
+*.md
+!README.md
+
+# 测试
+coverage/
+.nyc_output/
+
+# 临时文件
+tmp/
+temp/
