@@ -70,7 +70,7 @@ const defaultAdmin = {
 ```bash
 cd backend
 rm database.sqlite
-npm run dev  # 自动重建数据库
+pnpm run dev  # 自动重建数据库
 ```
 
 ---
@@ -156,7 +156,7 @@ SELECT password FROM users WHERE username = 'admin';
 ```bash
 cd backend
 rm database.sqlite
-npm run dev
+pnpm run dev
 ```
 
 #### 方案2：迁移现有用户（生产环境）

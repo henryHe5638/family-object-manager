@@ -6,16 +6,16 @@ FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 # 复制前端依赖文件
-COPY frontend/package*.json ./
+COPY frontend/package.json ./
 
-# 清理 npm 缓存并安装依赖
-RUN npm cache clean --force && npm install --legacy-peer-deps
+# 启用 corepack 并安装依赖
+RUN corepack enable && pnpm install --no-frozen-lockfile
 
 # 复制前端源码
 COPY frontend/ ./
 
 # 构建前端
-RUN npm run build
+RUN pnpm run build
 
 # 阶段 2: 构建后端
 FROM node:20-alpine AS backend-builder
@@ -23,16 +23,16 @@ FROM node:20-alpine AS backend-builder
 WORKDIR /app/backend
 
 # 复制后端依赖文件
-COPY backend/package*.json ./
+COPY backend/package.json ./
 
-# 安装后端依赖
-RUN npm cache clean --force && npm install --legacy-peer-deps
+# 启用 corepack 并安装依赖
+RUN corepack enable && pnpm install --no-frozen-lockfile
 
 # 复制后端源码
 COPY backend/ ./
 
 # 构建后端 TypeScript
-RUN npm run build
+RUN pnpm run build
 
 # 阶段 3: 生产镜像
 FROM node:20-alpine
@@ -40,8 +40,8 @@ FROM node:20-alpine
 WORKDIR /app
 
 # 安装生产依赖
-COPY backend/package*.json ./
-RUN npm install --only=production --legacy-peer-deps && npm cache clean --force
+COPY backend/package.json ./
+RUN corepack enable && pnpm install --prod --no-frozen-lockfile
 
 # 从构建阶段复制编译后的后端代码
 COPY --from=backend-builder /app/backend/dist ./dist

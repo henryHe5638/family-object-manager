@@ -26,7 +26,7 @@
 
 ```bash
 cd /Volumes/Henry/code/family-object-manager/frontend
-npm run dev
+pnpm run dev
 ```
 
 前端将运行在: http://localhost:5173

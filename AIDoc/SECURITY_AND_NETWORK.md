@@ -80,7 +80,7 @@ VITE_API_URL=http://192.168.3.100:3000/api
 
 ```bash
 cd frontend
-npm run dev
+pnpm run dev
 ```
 
 #### 4. 访问方式
@@ -148,13 +148,13 @@ npm run dev
 ### 后端
 ```bash
 cd backend
-npm run dev
+pnpm run dev
 ```
 
 ### 前端
 ```bash
 cd frontend
-npm run dev
+pnpm run dev
 ```
 
 ### 一键启动（可选）

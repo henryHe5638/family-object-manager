@@ -147,11 +147,11 @@ cd family-object-manager
 
 # 安装后端依赖
 cd backend
-npm install
+pnpm install
 
 # 安装前端依赖
 cd ../frontend
-npm install
+pnpm install
 ```
 
 ### ⚙️ 环境配置
@@ -188,24 +188,24 @@ VITE_APP_TITLE=家庭物资管理系统
 ```bash
 # 1. 启动后端服务（在 backend 目录）
 cd backend
-npm run dev
+pnpm run dev
 
 # 2. 启动前端服务（在 frontend 目录，新开终端窗口）
 cd frontend
-npm run dev
+pnpm run dev
 ```
 
 #### 生产模式
 ```bash
 # 构建后端
 cd backend
-npm run build
-npm start
+pnpm run build
+pnpm start
 
 # 构建前端
 cd frontend
-npm run build
-npm run preview
+pnpm run build
+pnpm run preview
 ```
 
 **访问地址：**
@@ -602,15 +602,15 @@ SOFTWARE.
 
 ```bash
 cd backend
-npm run build
-npm start
+pnpm run build
+pnpm start
 ```
 
 ### 前端构建
 
 ```bash
 cd frontend
-npm run build
+pnpm run build
 ```
 
 构建产物在 `frontend/dist` 目录，可以部署到任何静态服务器。

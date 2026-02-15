@@ -157,15 +157,15 @@
 ### 后端：
 ```bash
 cd backend
-npm install
-npm run dev  # http://localhost:3000
+pnpm install
+pnpm run dev  # http://localhost:3000
 ```
 
 ### 前端：
 ```bash
 cd frontend
-npm install
-npm run dev  # http://localhost:5174
+pnpm install
+pnpm run dev  # http://localhost:5174
 ```
 
 ### 首次使用：

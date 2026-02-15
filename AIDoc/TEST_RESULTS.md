@@ -211,7 +211,7 @@ console.log('收到的密码（加密后）:', password);
 # 删除旧数据库，重新初始化
 cd backend
 rm database.sqlite
-npm run dev
+pnpm run dev
 # 默认管理员账号会自动创建：admin/admin123
 ```
 

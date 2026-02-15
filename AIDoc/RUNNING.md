@@ -116,11 +116,11 @@
 ```bash
 # 后端
 cd backend
-npm run dev
+pnpm run dev
 
 # 前端
 cd frontend  
-npm run dev
+pnpm run dev
 ```
 
 ---
