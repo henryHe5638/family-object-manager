@@ -125,13 +125,13 @@ const loading = ref(true);
 const itemCount = computed(() => items.value.length);
 const drawerCount = computed(() => drawers.value.length);
 const totalValue = computed(() => {
-  const total = items.value.reduce((sum, item) => sum + (item.purchase_price || 0) * (item.quantity || 1), 0);
+  const total = items.value.reduce((sum: number, item: any) => sum + (item.purchase_price || 0) * (item.quantity || 1), 0);
   return `¥${total.toFixed(2)}`;
 });
 const expiringCount = computed(() => {
   const today = new Date();
   const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-  return items.value.filter(item => {
+  return items.value.filter((item: any) => {
     if (!item.expiry_date) return false;
     const expiry = new Date(item.expiry_date);
     return expiry >= today && expiry <= thirtyDaysLater;
@@ -183,8 +183,17 @@ const loadData = async () => {
 
 const getImageUrl = (imageUrl: string) => {
   if (!imageUrl) return '';
+  if (imageUrl.startsWith('data:')) return imageUrl;
   if (imageUrl.startsWith('http')) return imageUrl;
-  return `http://localhost:3000${imageUrl}`;
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const shouldUseRuntime =
+    typeof window !== 'undefined' &&
+    apiUrl.includes('localhost') &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1';
+  const runtimeBase = typeof window !== 'undefined' ? window.location.origin : '';
+  const baseUrl = shouldUseRuntime ? runtimeBase : apiUrl.replace('/api', '');
+  return `${baseUrl}${imageUrl}`;
 };
 
 const goBack = () => {

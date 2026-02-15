@@ -4,7 +4,6 @@
 
 **🤖 完全由 AI 编程工具开发的现代化全栈管理系统 🤖**
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://typescriptlang.org/)
 [![Vue.js](https://img.shields.io/badge/Vue.js-35495E?logo=vue.js&logoColor=4FC08D)](https://vuejs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -17,7 +16,7 @@
 
 ## 💡 项目说明
 
-> **🤖 AI First Development**: 本项目完全使用 AI 编程工具（GitHub Copilot、Claude等）以 VibeCoding 形式开发。
+> **🤖 AI First Development**: 本项目完全使用 AI 编程工具（GitHub Copilot、Claude等）以 VibeCoding 氛围编程 形式耗时一天开发。
 
 ## 🚀 功能一览
 

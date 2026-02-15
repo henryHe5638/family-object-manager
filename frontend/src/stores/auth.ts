@@ -15,14 +15,15 @@ export const useAuthStore = defineStore('auth', () => {
       // 对密码进行客户端加密
       const encryptedPassword = encryptPassword(password);
       const response = await authApi.login({ username, password: encryptedPassword });
-      token.value = response.token;
-      user.value = response.user;
+      const data = response.data || response;
+      token.value = data.token;
+      user.value = data.user;
       isAuthenticated.value = true;
       
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       
-      return response;
+      return data;
     } catch (error: any) {
       throw new Error(error.response?.data?.error || '登录失败');
     }
@@ -55,7 +56,8 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const response = await authApi.getCurrentUser();
-      user.value = response;
+      const data = response.data || response;
+      user.value = data;
       isAuthenticated.value = true;
     } catch (error) {
       logout();

@@ -446,6 +446,7 @@ import { drawerApi, locationApi } from "../api/modules";
 import { useAuthStore } from "../stores/auth";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import ImageUpload from "../components/ImageUpload.vue";
+import QRCodeDisplay from "../components/QRCodeDisplay.vue";
 
 const authStore = useAuthStore();
 
@@ -493,7 +494,7 @@ const setSort = (key: string) => {
 const filteredAndSortedDrawers = computed(() => {
   let list = drawers.value.slice();
   if (selectedLocationId.value) {
-    list = list.filter((d) => d.location_id === selectedLocationId.value);
+    list = list.filter((d: any) => d.location_id === selectedLocationId.value);
   }
 
   list.sort((a: any, b: any) => {
@@ -629,8 +630,17 @@ const printQRCode = () => {
 // 获取图片完整 URL
 const getImageUrl = (imageUrl: string) => {
   if (!imageUrl) return "";
+  if (imageUrl.startsWith("data:")) return imageUrl;
   if (imageUrl.startsWith("http")) return imageUrl;
-  return `http://localhost:3000${imageUrl}`;
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const shouldUseRuntime =
+    typeof window !== "undefined" &&
+    !import.meta.env.VITE_API_URL &&
+    window.location.hostname !== "localhost" &&
+    window.location.hostname !== "127.0.0.1";
+  const runtimeBase = typeof window !== "undefined" ? window.location.origin : "";
+  const baseUrl = shouldUseRuntime ? runtimeBase : apiUrl.replace("/api", "");
+  return `${baseUrl}${imageUrl}`;
 };
 
 onMounted(() => {

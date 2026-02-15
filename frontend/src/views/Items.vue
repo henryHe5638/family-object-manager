@@ -624,6 +624,7 @@ import CategorySelector from "../components/CategorySelector.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import ImageUpload from "../components/ImageUpload.vue";
 import { itemApi, locationApi, drawerApi, categoryApi } from "../api/modules";
+import QRCodeDisplay from "../components/QRCodeDisplay.vue";
 
 const items = ref<any[]>([]);
 const locations = ref<any[]>([]);
@@ -687,9 +688,9 @@ const loadData = async () => {
 };
 
 // 监听抽屉选择变化，自动设置地点
-watch(() => form.drawer_id, (newDrawerId) => {
+watch(() => form.drawer_id, (newDrawerId: number | null) => {
   if (newDrawerId) {
-    const selectedDrawer = drawers.value.find(d => d.id === newDrawerId);
+    const selectedDrawer = drawers.value.find((d: any) => d.id === newDrawerId);
     if (selectedDrawer && selectedDrawer.location_id) {
       form.location_id = selectedDrawer.location_id;
     }
@@ -831,7 +832,15 @@ const getImageUrl = (imageUrl: string, imageData?: string) => {
   // 如果是完整 URL，直接返回
   if (imageUrl.startsWith("http")) return imageUrl;
   // 兼容旧数据：拼接路径
-  return `http://localhost:3000${imageUrl}`;
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const shouldUseRuntime =
+    typeof window !== "undefined" &&
+    !import.meta.env.VITE_API_URL &&
+    window.location.hostname !== "localhost" &&
+    window.location.hostname !== "127.0.0.1";
+  const runtimeBase = typeof window !== "undefined" ? window.location.origin : "";
+  const baseUrl = shouldUseRuntime ? runtimeBase : apiUrl.replace("/api", "");
+  return `${baseUrl}${imageUrl}`;
 };
 
 const confirmDialog = ref<InstanceType<typeof ConfirmDialog>>();

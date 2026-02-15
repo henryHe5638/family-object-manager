@@ -96,8 +96,8 @@ const loadExpiryData = async () => {
       itemApi.getExpiring(30),
     ]);
     
-    expiredItems.value = expiredRes;
-    expiringItems.value = expiringRes;
+    expiredItems.value = expiredRes.data || expiredRes;
+    expiringItems.value = expiringRes.data || expiringRes;
     
     // 只有当有到期或即将到期的物品时才显示弹窗
     if (expiredItems.value.length > 0 || expiringItems.value.length > 0) {

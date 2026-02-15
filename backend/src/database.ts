@@ -1,9 +1,16 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 import bcrypt from 'bcryptjs';
 import { encryptPassword } from './utils/crypto';
 
-const db: Database.Database = new Database(path.join(__dirname, '../database.sqlite'));
+const defaultDbPath = path.join(__dirname, '../database.sqlite');
+const dbPath = process.env.DB_PATH || defaultDbPath;
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+const db: Database.Database = new Database(dbPath);
 
 // 初始化数据库表
 export function initDatabase() {

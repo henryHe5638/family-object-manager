@@ -136,8 +136,8 @@ const loadExpiryData = async () => {
       itemApi.getExpiring(30),
     ]);
     
-    expiredItems.value = expired;
-    expiringItems.value = expiring;
+    expiredItems.value = expired.data || expired;
+    expiringItems.value = expiring.data || expiring;
   } catch (error) {
     console.error('加载到期数据失败:', error);
   }

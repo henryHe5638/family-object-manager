@@ -12,12 +12,6 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ drawer.description || '无描述' }}</p>
             <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">地点: {{ drawer.location_name || '无' }}</p>
           </div>
-          <button
-            @click="showQRCode"
-            class="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600"
-          >
-            查看二维码
-          </button>
         </div>
       </div>
 
@@ -240,17 +234,6 @@ const loadDrawer = async () => {
     items.value = data.items || [];
   } catch (error) {
     console.error('加载抽屉失败:', error);
-  }
-};
-
-const showQRCode = async () => {
-  try {
-    const response = await drawerApi.regenerateQR(Number(route.params.id));
-    const data = response.data || response;
-    qrCodeImage.value = data.qrCodeImage;
-    showQR.value = true;
-  } catch (error) {
-    console.error('获取二维码失败:', error);
   }
 };
 

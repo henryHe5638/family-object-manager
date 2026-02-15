@@ -74,7 +74,13 @@ const imageUrl = computed(() => {
   if (props.modelValue.startsWith('http')) return props.modelValue;
   // 否则拼接 API 地址（兼容旧数据）
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-  const baseUrl = apiUrl.replace('/api', '');
+  const shouldUseRuntime =
+    typeof window !== 'undefined' &&
+    !import.meta.env.VITE_API_URL &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1';
+  const runtimeBase = typeof window !== 'undefined' ? window.location.origin : '';
+  const baseUrl = shouldUseRuntime ? runtimeBase : apiUrl.replace('/api', '');
   return `${baseUrl}${props.modelValue}`;
 });
 
