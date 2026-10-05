@@ -171,6 +171,15 @@ router.delete('/:id', authMiddleware, adminOnly, (req: any, res) => {
       return res.status(400).json({ error: '不能删除当前登录用户' });
     }
 
+    // 用户还拥有物品或抽屉时禁止删除，避免产生归属悬空的数据
+    const itemCount = db.prepare('SELECT COUNT(*) as count FROM items WHERE created_by = ?').get(id) as any;
+    const drawerCount = db.prepare('SELECT COUNT(*) as count FROM drawers WHERE created_by = ?').get(id) as any;
+    if (itemCount.count > 0 || drawerCount.count > 0) {
+      return res.status(400).json({
+        error: `该用户还拥有 ${itemCount.count} 个物品、${drawerCount.count} 个抽屉，请先删除或转移这些数据后再删除用户`
+      });
+    }
+
     const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
     
     if (result.changes === 0) {

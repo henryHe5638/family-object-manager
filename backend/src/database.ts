@@ -81,6 +81,7 @@ export function initDatabase() {
       qr_code TEXT UNIQUE,
       image_url TEXT,
       image_data TEXT,
+      is_private INTEGER DEFAULT 0,
       location_id INTEGER,
       parent_id INTEGER,
       created_by INTEGER,
@@ -97,13 +98,17 @@ export function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       description TEXT,
+      brand TEXT,
+      size TEXT,
       item_category_id INTEGER,
       location_id INTEGER,
       drawer_id INTEGER,
       purchase_date DATE,
+      production_date DATE,
       purchase_price REAL,
       expiry_date DATE,
       quantity INTEGER DEFAULT 1,
+      is_private INTEGER DEFAULT 0,
       image_url TEXT,
       image_data TEXT,
       qr_code TEXT UNIQUE,
@@ -116,6 +121,89 @@ export function initDatabase() {
       FOREIGN KEY (created_by) REFERENCES users(id)
     )
   `);
+
+  // 物品状态字段迁移：stored=在库, in_use=使用中, discarded=已丢弃
+  const itemColumns = db.prepare("PRAGMA table_info(items)").all() as any[];
+  if (!itemColumns.some((col) => col.name === 'status')) {
+    db.exec(`ALTER TABLE items ADD COLUMN status TEXT DEFAULT 'stored'`);
+    console.log('物品状态字段迁移完成');
+  }
+
+  // 生产日期字段迁移
+  if (!itemColumns.some((col) => col.name === 'production_date')) {
+    db.exec(`ALTER TABLE items ADD COLUMN production_date DATE`);
+    console.log('生产日期字段迁移完成');
+  }
+
+  // 品牌字段迁移
+  if (!itemColumns.some((col) => col.name === 'brand')) {
+    db.exec(`ALTER TABLE items ADD COLUMN brand TEXT`);
+    console.log('品牌字段迁移完成');
+  }
+
+  // 大小字段迁移（重量/体积/尺码等自由文本）
+  if (!itemColumns.some((col) => col.name === 'size')) {
+    db.exec(`ALTER TABLE items ADD COLUMN size TEXT`);
+    console.log('大小字段迁移完成');
+  }
+
+  // 私人物品/私人抽屉标记迁移：is_private=1 仅创建者可见，0 所有人可见
+  // 历史数据回填为私有，保持迁移前"仅自己可见"的行为不变
+  const drawerColumns = db.prepare("PRAGMA table_info(drawers)").all() as any[];
+  if (!itemColumns.some((col) => col.name === 'is_private')) {
+    db.exec(`ALTER TABLE items ADD COLUMN is_private INTEGER DEFAULT 0`);
+    db.exec(`UPDATE items SET is_private = 1`);
+    console.log('私人物品字段迁移完成');
+  }
+  if (!drawerColumns.some((col) => col.name === 'is_private')) {
+    db.exec(`ALTER TABLE drawers ADD COLUMN is_private INTEGER DEFAULT 0`);
+    db.exec(`UPDATE drawers SET is_private = 1`);
+    console.log('私人抽屉字段迁移完成');
+  }
+
+  // 物品类目与品类的多对多映射表：同名物品视为一个，可归属多个品类
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS item_category_map (
+      item_category_id INTEGER NOT NULL,
+      group_id INTEGER NOT NULL,
+      PRIMARY KEY (item_category_id, group_id),
+      FOREIGN KEY (item_category_id) REFERENCES item_categories(id) ON DELETE CASCADE,
+      FOREIGN KEY (group_id) REFERENCES category_groups(id) ON DELETE CASCADE
+    )
+  `);
+
+  // 历史数据迁移：按名称合并重复的物类类目，并填充映射
+  const mapCount = db.prepare('SELECT COUNT(*) as c FROM item_category_map').get() as any;
+  if (mapCount.c === 0) {
+    const allCats = db.prepare('SELECT id, name, group_id FROM item_categories ORDER BY id').all() as any[];
+    const nameToId = new Map<string, number>();
+    const remap = new Map<number, number>();
+    const insertMap = db.prepare('INSERT OR IGNORE INTO item_category_map (item_category_id, group_id) VALUES (?, ?)');
+    const updateItemCat = db.prepare('UPDATE items SET item_category_id = ? WHERE item_category_id = ?');
+
+    for (const cat of allCats) {
+      const key = (cat.name || '').trim();
+      let canonical = nameToId.get(key);
+      if (canonical === undefined) {
+        nameToId.set(key, cat.id);
+        canonical = cat.id;
+      } else {
+        remap.set(cat.id, canonical);
+      }
+      insertMap.run(canonical, cat.group_id);
+    }
+
+    for (const [dupId, canonicalId] of remap) {
+      updateItemCat.run(canonicalId, dupId);
+      db.prepare('DELETE FROM item_categories WHERE id = ?').run(dupId);
+    }
+    if (remap.size > 0) {
+      console.log(`同名物品类目合并完成，共合并 ${remap.size} 个`);
+    }
+  }
+
+  // 物品名称全局唯一
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_item_categories_name ON item_categories(name)');
 
   // 初始化默认配置，使用环境变量
   const defaultSettings = [
@@ -156,13 +244,6 @@ export function initDatabase() {
 
 // 插入内置常用大类和物品
 export function seedDefaultCategories() {
-  // 检查是否已经有数据，避免重复添加
-  const existingGroups = db.prepare('SELECT COUNT(*) as count FROM category_groups').get() as any;
-  if (existingGroups.count > 0) {
-    console.log('类目数据已存在，跳过初始化');
-    return;
-  }
-
   const categories = [
     {
       group: '食品',
@@ -253,22 +334,46 @@ export function seedDefaultCategories() {
       group: '户外运动',
       icon: '⚽',
       items: ['帐篷', '睡袋', '登山包', '防潮垫', '户外刀具', '指南针', '手电筒', '头灯', '水壶', '保温杯', '户外锅具', '烧烤架', '瑜伽垫', '跳绳', '哑铃', '篮球', '足球', '羽毛球拍']
+    },
+    {
+      group: '服饰鞋帽',
+      icon: '👔',
+      items: ['T恤', '衬衫', '外套', '毛衣', '羽绒服', '卫衣', '风衣', '西装', '连衣裙', '半身裙', '牛仔裤', '休闲裤', '运动裤', '短裤', '西裤', '运动鞋', '皮鞋', '凉鞋', '拖鞋', '靴子', '高跟鞋', '帆布鞋', '袜子', '内衣', '内裤', '帽子', '围巾', '手套', '腰带', '包包', '太阳镜']
     }
   ];
 
   const insertGroup = db.prepare('INSERT INTO category_groups (name, icon, description) VALUES (?, ?, ?)');
   const insertItem = db.prepare('INSERT INTO item_categories (name, group_id, description) VALUES (?, ?, ?)');
+  const findGroup = db.prepare('SELECT id FROM category_groups WHERE name = ?');
+  const findItemByName = db.prepare('SELECT id FROM item_categories WHERE name = ?');
+  const insertMap = db.prepare('INSERT OR IGNORE INTO item_category_map (item_category_id, group_id) VALUES (?, ?)');
 
+  let addedGroups = 0;
   categories.forEach(cat => {
-    const result = insertGroup.run(cat.group, cat.icon, `${cat.group}类商品`);
-    const groupId = result.lastInsertRowid;
-    
+    // 按名称检查，已存在的大类跳过（兼容已初始化的数据库）
+    const existingGroup: any = findGroup.get(cat.group);
+    let groupId: number;
+    if (existingGroup) {
+      groupId = existingGroup.id;
+    } else {
+      const result = insertGroup.run(cat.group, cat.icon, `${cat.group}类商品`);
+      groupId = Number(result.lastInsertRowid);
+      addedGroups++;
+    }
+
     cat.items.forEach(item => {
-      insertItem.run(item, groupId, `${cat.group} - ${item}`);
+      // 同名物品视为一个：已存在则补充品类映射
+      const existingItem: any = findItemByName.get(item);
+      if (existingItem) {
+        insertMap.run(existingItem.id, groupId);
+      } else {
+        const result = insertItem.run(item, groupId, `${cat.group} - ${item}`);
+        insertMap.run(Number(result.lastInsertRowid), groupId);
+      }
     });
   });
 
-  console.log('内置常用类目已添加');
+  console.log(addedGroups > 0 ? `内置类目更新完成，新增 ${addedGroups} 个大类` : '内置类目已存在，跳过初始化');
 }
 
 export default db;

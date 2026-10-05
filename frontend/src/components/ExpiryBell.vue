@@ -1,9 +1,9 @@
 <template>
   <div class="relative">
     <!-- 铃铛按钮 -->
-    <button 
+    <button
       @click="toggleDropdown"
-      class="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+      class="relative btn btn-ghost"
       :class="{ 'text-red-600': expiryCount > 0 }"
     >
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,29 +25,29 @@
     </button>
 
     <!-- 下拉提醒列表 -->
-    <div 
+    <div
       v-if="showDropdown"
-      class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+      class="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50"
     >
-      <div class="p-4 border-b border-gray-200">
-        <h3 class="text-lg font-bold text-gray-900">到期提醒</h3>
+      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">到期提醒</h3>
       </div>
 
       <div class="max-h-96 overflow-y-auto">
         <!-- 已过期物品 -->
-        <div v-if="expiredItems.length > 0" class="p-3 bg-red-50">
-          <h4 class="text-sm font-semibold text-red-800 mb-2">已过期 ({{ expiredItems.length }})</h4>
-          <div 
-            v-for="item in expiredItems" 
+        <div v-if="expiredItems.length > 0" class="p-3 bg-red-50 dark:bg-red-900/20">
+          <h4 class="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">已过期 ({{ expiredItems.length }})</h4>
+          <div
+            v-for="item in expiredItems"
             :key="'expired-' + item.id"
-            class="bg-white rounded p-3 mb-2 last:mb-0 border-l-4 border-red-500"
+            class="bg-white dark:bg-gray-800 rounded p-3 mb-2 last:mb-0 border-l-4 border-red-500"
           >
-            <div class="font-medium text-gray-900">{{ item.name }}</div>
-            <div class="text-sm text-gray-600 mt-1">
+            <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
               <span>{{ item.category_name || '未分类' }}</span>
               <span v-if="item.location_name"> · {{ item.location_name }}</span>
             </div>
-            <div class="text-sm text-red-600 mt-1">
+            <div class="text-sm text-red-600 dark:text-red-400 mt-1">
               到期时间: {{ formatDate(item.expiry_date) }}
             </div>
           </div>
@@ -55,27 +55,27 @@
 
         <!-- 即将到期物品 -->
         <div v-if="expiringItems.length > 0" class="p-3">
-          <h4 class="text-sm font-semibold text-yellow-800 mb-2">即将到期 ({{ expiringItems.length }})</h4>
-          <div 
-            v-for="item in expiringItems" 
+          <h4 class="text-sm font-semibold text-yellow-800 dark:text-yellow-300 mb-2">即将到期 ({{ expiringItems.length }})</h4>
+          <div
+            v-for="item in expiringItems"
             :key="'expiring-' + item.id"
-            class="bg-white rounded p-3 mb-2 last:mb-0 border-l-4 border-yellow-500"
+            class="bg-white dark:bg-gray-800 rounded p-3 mb-2 last:mb-0 border-l-4 border-yellow-500"
           >
-            <div class="font-medium text-gray-900">{{ item.name }}</div>
-            <div class="text-sm text-gray-600 mt-1">
+            <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
               <span>{{ item.category_name || '未分类' }}</span>
               <span v-if="item.location_name"> · {{ item.location_name }}</span>
             </div>
-            <div class="text-sm text-yellow-600 mt-1">
+            <div class="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
               到期时间: {{ formatDate(item.expiry_date) }} ({{ getDaysLeft(item.expiry_date) }}天后)
             </div>
           </div>
         </div>
 
         <!-- 无到期提醒 -->
-        <div 
-          v-if="expiryCount === 0" 
-          class="p-8 text-center text-gray-500"
+        <div
+          v-if="expiryCount === 0"
+          class="p-8 text-center text-gray-500 dark:text-gray-400"
         >
           <svg class="w-16 h-16 mx-auto mb-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -84,10 +84,10 @@
         </div>
       </div>
 
-      <div class="p-3 border-t border-gray-200 bg-gray-50">
+      <div class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/40">
         <button
           @click="closeDropdown"
-          class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          class="btn btn-primary w-full"
         >
           关闭
         </button>

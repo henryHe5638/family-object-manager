@@ -25,6 +25,9 @@ WORKDIR /app/backend
 # 复制后端依赖文件
 COPY backend/package.json ./
 
+# 安装编译工具（better-sqlite3 在 musl 环境下需要从源码编译）
+RUN apk add --no-cache python3 make g++
+
 # 启用 corepack 并安装依赖
 RUN corepack enable && pnpm install --no-frozen-lockfile
 
@@ -41,6 +44,7 @@ WORKDIR /app
 
 # 安装生产依赖
 COPY backend/package.json ./
+RUN apk add --no-cache python3 make g++
 RUN corepack enable && pnpm install --prod --no-frozen-lockfile
 
 # 从构建阶段复制编译后的后端代码

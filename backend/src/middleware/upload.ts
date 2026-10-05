@@ -24,12 +24,28 @@ const storage = multer.diskStorage({
 
 // 文件过滤器：只允许图片
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  
-  if (allowedMimes.includes(file.mimetype)) {
+  const allowedMimes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+    'image/heic-sequence',
+    'image/heif-sequence'
+  ];
+
+  // 部分客户端上传 HEIC/HEIF 时 mimetype 可能缺失或为 octet-stream，此时按扩展名判断
+  const ext = path.extname(file.originalname).toLowerCase();
+  const heifByExt =
+    (!file.mimetype || file.mimetype === 'application/octet-stream') &&
+    ['.heic', '.heif'].includes(ext);
+
+  if (allowedMimes.includes(file.mimetype) || heifByExt) {
     cb(null, true);
   } else {
-    cb(new Error('只允许上传图片文件 (jpeg, jpg, png, gif, webp)'));
+    cb(new Error('只允许上传图片文件 (jpeg, jpg, png, gif, webp, heic, heif)'));
   }
 };
 
@@ -38,6 +54,6 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 限制 5MB
+    fileSize: 20 * 1024 * 1024 // 限制 20MB
   }
 });

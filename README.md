@@ -95,13 +95,13 @@ cd family-object-manager
 
 # 2. 安装后端依赖并启动
 cd backend
-npm install
-npm run dev  # 后端服务: http://localhost:3000
+pnpm install
+pnpm run dev  # 后端服务: http://localhost:3000
 
 # 3. 新终端窗口，启动前端
 cd ../frontend  
-npm install
-npm run dev  # 前端服务: http://localhost:5173
+pnpm install
+pnpm run dev  # 前端服务: http://localhost:5173
 ```
 
 ### 🎉 首次使用

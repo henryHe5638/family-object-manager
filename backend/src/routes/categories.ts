@@ -7,6 +7,9 @@ const router: Router = Router();
 
 router.use(authMiddleware);
 
+// 每个物品类目带有的分组信息子查询（首个大类名，兼容旧字段）
+const GROUP_NAME_SQL = `(SELECT cg.name FROM item_category_map m JOIN category_groups cg ON cg.id = m.group_id WHERE m.item_category_id = ic.id ORDER BY cg.name LIMIT 1)`;
+
 // ========== 大类（Category Groups）API ==========
 
 // 获取所有大类
@@ -20,11 +23,16 @@ router.get('/groups', (req, res) => {
   }
 });
 
-// 获取单个大类下的所有物品类目
+// 获取单个大类下的所有物品类目（通过映射表，一个物品可属于多个大类）
 router.get('/groups/:id/items', (req, res) => {
   try {
     const { id } = req.params;
-    const items = db.prepare('SELECT * FROM item_categories WHERE group_id = ? ORDER BY name').all(id);
+    const items = db.prepare(`
+      SELECT ic.* FROM item_categories ic
+      JOIN item_category_map m ON m.item_category_id = ic.id
+      WHERE m.group_id = ?
+      ORDER BY ic.name
+    `).all(id);
     res.json(items);
   } catch (error) {
     console.error('获取大类物品列表错误:', error);
@@ -80,13 +88,13 @@ router.put('/groups/:id', adminOnly, (req, res) => {
 router.delete('/groups/:id', adminOnly, (req, res) => {
   try {
     const { id } = req.params;
-    
-    // 检查该大类下是否有物品类目
-    const itemCount = db.prepare('SELECT COUNT(*) as count FROM item_categories WHERE group_id = ?').get(id) as any;
+
+    // 检查该大类下是否有物品类目（通过映射表）
+    const itemCount = db.prepare('SELECT COUNT(*) as count FROM item_category_map WHERE group_id = ?').get(id) as any;
     if (itemCount.count > 0) {
       return res.status(400).json({ error: '该大类下还有物品类目，无法删除' });
     }
-    
+
     const result = db.prepare('DELETE FROM category_groups WHERE id = ?').run(id);
 
     if (result.changes === 0) {
@@ -101,15 +109,16 @@ router.delete('/groups/:id', adminOnly, (req, res) => {
 });
 
 // ========== 物品类目（Item Categories）API ==========
+// 规则：物品名称全局唯一（同名视为同一个物品），一个物品可映射到多个大类
 
-// 获取所有物品类目
+// 获取所有物品类目（含所属大类信息）
 router.get('/items', (req, res) => {
   try {
     const items = db.prepare(`
-      SELECT ic.*, cg.name as group_name
+      SELECT ic.*, ${GROUP_NAME_SQL} as group_name,
+             (SELECT GROUP_CONCAT(cg.name, '、') FROM item_category_map m JOIN category_groups cg ON cg.id = m.group_id WHERE m.item_category_id = ic.id) as all_group_names
       FROM item_categories ic
-      LEFT JOIN category_groups cg ON ic.group_id = cg.id
-      ORDER BY cg.name, ic.name
+      ORDER BY ic.name
     `).all();
     res.json(items);
   } catch (error) {
@@ -122,20 +131,19 @@ router.get('/items', (req, res) => {
 router.get('/items/search', (req, res) => {
   try {
     const { q } = req.query;
-    
+
     if (!q || typeof q !== 'string') {
       return res.json([]);
     }
 
     const items = db.prepare(`
-      SELECT ic.*, cg.name as group_name
+      SELECT ic.*, ${GROUP_NAME_SQL} as group_name
       FROM item_categories ic
-      LEFT JOIN category_groups cg ON ic.group_id = cg.id
       WHERE ic.name LIKE ?
       ORDER BY ic.name
       LIMIT 20
     `).all(`%${q}%`);
-    
+
     res.json(items);
   } catch (error) {
     console.error('搜索物品类目错误:', error);
@@ -143,24 +151,38 @@ router.get('/items/search', (req, res) => {
   }
 });
 
-// 创建物品类目
+// 创建物品类目（同名自动复用，仅补充大类映射）
 router.post('/items', (req, res) => {
   try {
     const { group_id, name, description } = req.body;
 
-    if (!name) {
+    if (!name || !name.trim()) {
       return res.status(400).json({ error: '物品类目名称不能为空' });
     }
-    
+
     if (!group_id) {
       return res.status(400).json({ error: '必须选择一个大类' });
     }
 
-    const result = db.prepare('INSERT INTO item_categories (group_id, name, description) VALUES (?, ?, ?)').run(group_id, name, description);
+    const trimmed = name.trim();
+
+    // 同名物品视为一个：已存在则只补充大类映射
+    const existing: any = db.prepare('SELECT id FROM item_categories WHERE name = ?').get(trimmed);
+    if (existing) {
+      db.prepare('INSERT OR IGNORE INTO item_category_map (item_category_id, group_id) VALUES (?, ?)').run(existing.id, group_id);
+      return res.status(200).json({
+        message: '已关联到现有同名物品类目',
+        id: existing.id
+      });
+    }
+
+    const result = db.prepare('INSERT INTO item_categories (group_id, name, description) VALUES (?, ?, ?)').run(group_id, trimmed, description || `${trimmed}`);
+    const newId = result.lastInsertRowid;
+    db.prepare('INSERT INTO item_category_map (item_category_id, group_id) VALUES (?, ?)').run(newId, group_id);
 
     res.status(201).json({
       message: '物品类目创建成功',
-      id: result.lastInsertRowid
+      id: newId
     });
   } catch (error) {
     console.error('创建物品类目错误:', error);
@@ -168,24 +190,35 @@ router.post('/items', (req, res) => {
   }
 });
 
-// 更新物品类目
+// 更新物品类目（重命名 / 调整所属大类）
 router.put('/items/:id', (req, res) => {
   try {
     const { id } = req.params;
     const { group_id, name, description } = req.body;
 
-    if (!name) {
+    if (!name || !name.trim()) {
       return res.status(400).json({ error: '物品类目名称不能为空' });
     }
-    
-    if (!group_id) {
-      return res.status(400).json({ error: '必须选择一个大类' });
+
+    const target: any = db.prepare('SELECT id FROM item_categories WHERE id = ?').get(id);
+    if (!target) {
+      return res.status(404).json({ error: '物品类目不存在' });
     }
 
-    const result = db.prepare('UPDATE item_categories SET group_id = ?, name = ?, description = ? WHERE id = ?').run(group_id, name, description, id);
+    const trimmed = name.trim();
+    // 名称冲突检查（排除自身）
+    const duplicate: any = db.prepare('SELECT id FROM item_categories WHERE name = ? AND id != ?').get(trimmed, id);
+    if (duplicate) {
+      return res.status(400).json({ error: `物品名称「${trimmed}」已存在，同名物品视为同一个` });
+    }
 
-    if (result.changes === 0) {
-      return res.status(404).json({ error: '物品类目不存在' });
+    db.prepare('UPDATE item_categories SET group_id = ?, name = ?, description = ? WHERE id = ?')
+      .run(group_id || target.group_id, trimmed, description, id);
+
+    // 调整大类：替换为该单一映射
+    if (group_id) {
+      db.prepare('DELETE FROM item_category_map WHERE item_category_id = ?').run(id);
+      db.prepare('INSERT OR IGNORE INTO item_category_map (item_category_id, group_id) VALUES (?, ?)').run(id, group_id);
     }
 
     res.json({ message: '物品类目更新成功' });
@@ -199,13 +232,13 @@ router.put('/items/:id', (req, res) => {
 router.delete('/items/:id', (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // 检查是否有物品使用该类目
     const itemCount = db.prepare('SELECT COUNT(*) as count FROM items WHERE item_category_id = ?').get(id) as any;
     if (itemCount.count > 0) {
       return res.status(400).json({ error: '该物品类目正在被使用，无法删除' });
     }
-    
+
     const result = db.prepare('DELETE FROM item_categories WHERE id = ?').run(id);
 
     if (result.changes === 0) {

@@ -2,11 +2,11 @@
   <div class="space-y-4">
     <!-- 大类选择 -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">选择大类</label>
-      <select 
-        v-model="selectedGroup" 
+      <label class="form-label">选择大类</label>
+      <select
+        v-model="selectedGroup"
         @change="onGroupChange"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="input mt-1"
       >
         <option value="">请选择大类...</option>
         <option v-for="group in groups" :key="group.id" :value="group.id">
@@ -17,7 +17,7 @@
 
     <!-- 物品搜索/选择 -->
     <div v-if="selectedGroup">
-      <label class="block text-sm font-medium text-gray-700 mb-2">物品名称</label>
+      <label class="form-label">物品名称</label>
       <div class="relative">
         <input
           v-model="searchQuery"
@@ -25,28 +25,28 @@
           @focus="showSuggestions = true"
           @blur="onBlur"
           placeholder="搜索或输入物品名称..."
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="input mt-1"
         />
-        
+
         <!-- 下拉建议列表 -->
-        <div 
+        <div
           v-if="showSuggestions && (filteredItems.length > 0 || searchQuery)"
-          class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+          class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto"
         >
           <div
             v-for="item in filteredItems"
             :key="item.id"
             @mousedown="selectItem(item)"
-            class="px-3 py-2 hover:bg-blue-50 cursor-pointer"
+            class="px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/50 cursor-pointer"
           >
             {{ item.name }}
           </div>
-          
+
           <!-- 自定义新增选项 -->
-          <div 
+          <div
             v-if="searchQuery && !exactMatch"
             @mousedown="createCustom"
-            class="px-3 py-2 bg-green-50 hover:bg-green-100 cursor-pointer border-t border-gray-200 text-green-700"
+            class="px-3 py-2 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 cursor-pointer border-t border-gray-200 dark:border-gray-600 text-green-700 dark:text-green-300"
           >
             <span class="font-medium">+ 添加新物品:</span> {{ searchQuery }}
           </div>
@@ -77,7 +77,7 @@ const emit = defineEmits<{
 }>();
 
 const props = defineProps<{
-  modelValue?: { itemCategoryId?: number; name?: string };
+  initialCategoryId?: number | null;
 }>();
 
 const groups = ref<CategoryGroup[]>([]);
@@ -157,22 +157,51 @@ const createCustom = async () => {
   }
 };
 
+// 根据已保存的类目 id 恢复选中状态（编辑场景）
+const restoreSelection = async (categoryId: number) => {
+  try {
+    const response = await categoryApi.getAllItems();
+    const all: ItemCategory[] = response.data || response;
+    const category = all.find((c) => c.id === categoryId);
+    if (!category) return;
+    selectedGroup.value = String(category.group_id);
+    const groupRes = await categoryApi.getGroupItems(category.group_id);
+    items.value = groupRes.data || groupRes;
+    searchQuery.value = category.name;
+    emit('select', { itemCategoryId: category.id, name: category.name });
+  } catch (error) {
+    console.error('恢复类目选择失败:', error);
+  }
+};
+
+const clearSelection = () => {
+  selectedGroup.value = '';
+  items.value = [];
+  searchQuery.value = '';
+};
+
 // 初始化时加载大类
 onMounted(async () => {
   try {
     const response = await categoryApi.getGroups();
     groups.value = response.data || response;
+    // 有初始类目时回显选择
+    if (props.initialCategoryId) {
+      await restoreSelection(props.initialCategoryId);
+    }
   } catch (error) {
     console.error('加载大类失败:', error);
   }
 });
 
-// 如果有初始值，设置选中状态
-watch(() => props.modelValue, (value) => {
-  if (value?.name) {
-    searchQuery.value = value.name;
+// 外部传入的类目变化时同步（如编辑弹窗赋值）
+watch(() => props.initialCategoryId, (id) => {
+  if (id) {
+    restoreSelection(id);
+  } else {
+    clearSelection();
   }
-}, { immediate: true });
+});
 </script>
 
 <style scoped>

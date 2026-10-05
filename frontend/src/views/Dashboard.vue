@@ -2,13 +2,13 @@
   <Layout>
     <ExpiryModal ref="expiryModal" />
     <div class="px-4 sm:px-0">
-      <div class="sm:flex sm:items-center sm:justify-between mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">系统概览</h1>
+      <div class="page-header">
+        <h1 class="page-title">系统概览</h1>
         <router-link
           to="/scanner"
-          class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+          class="btn btn-primary"
         >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13.5 8.5a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
           </svg>
           扫码识别
@@ -16,43 +16,43 @@
       </div>
       
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="card">
           <div class="p-5">
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-6 w-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                 </svg>
               </div>
               <div class="ml-5 w-0 flex-1">
                 <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">物品总数</dt>
-                  <dd class="text-lg font-semibold text-gray-900">{{ stats.totalItems }}</dd>
+                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">物品总数</dt>
+                  <dd class="text-lg font-semibold text-gray-900 dark:text-white">{{ stats.totalItems }}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="card">
           <div class="p-5">
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-6 w-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                 </svg>
               </div>
               <div class="ml-5 w-0 flex-1">
                 <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">抽屉数量</dt>
-                  <dd class="text-lg font-semibold text-gray-900">{{ stats.totalDrawers }}</dd>
+                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">抽屉数量</dt>
+                  <dd class="text-lg font-semibold text-gray-900 dark:text-white">{{ stats.totalDrawers }}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="card">
           <div class="p-5">
             <div class="flex items-center">
               <div class="flex-shrink-0">
@@ -62,15 +62,15 @@
               </div>
               <div class="ml-5 w-0 flex-1">
                 <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">即将到期</dt>
-                  <dd class="text-lg font-semibold text-yellow-600">{{ stats.expiringItems }}</dd>
+                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">即将到期</dt>
+                  <dd class="text-lg font-semibold text-yellow-600 dark:text-yellow-400">{{ stats.expiringItems }}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="card">
           <div class="p-5">
             <div class="flex items-center">
               <div class="flex-shrink-0">
@@ -80,8 +80,8 @@
               </div>
               <div class="ml-5 w-0 flex-1">
                 <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">已过期</dt>
-                  <dd class="text-lg font-semibold text-red-600">{{ stats.expiredItems }}</dd>
+                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">已过期</dt>
+                  <dd class="text-lg font-semibold text-red-600 dark:text-red-400">{{ stats.expiredItems }}</dd>
                 </dl>
               </div>
             </div>
@@ -90,46 +90,46 @@
       </div>
 
       <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <div class="bg-white shadow rounded-lg p-6">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">最近添加的物品</h2>
+        <div class="card p-6">
+          <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">最近添加的物品</h2>
           <div v-if="recentItems.length > 0" class="space-y-3">
             <div
               v-for="item in recentItems"
               :key="item.id"
-              class="flex items-center justify-between p-3 bg-gray-50 rounded"
+              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded"
             >
               <div>
-                <div class="font-medium">{{ item.name }}</div>
-                <div class="text-sm text-gray-500">{{ item.category_name || '无类目' }}</div>
+                <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">{{ item.category_name || '无类目' }}</div>
               </div>
-              <div class="text-sm text-gray-500">
+              <div class="text-sm text-gray-500 dark:text-gray-400">
                 {{ formatDate(item.created_at) }}
               </div>
             </div>
           </div>
-          <div v-else class="text-center py-8 text-gray-500">
+          <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
             暂无物品
           </div>
         </div>
 
-        <div class="bg-white shadow rounded-lg p-6">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">快速操作</h2>
+        <div class="card p-6">
+          <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">快速操作</h2>
           <div class="space-y-3">
             <router-link
               to="/items"
-              class="block w-full px-4 py-3 bg-blue-600 text-white text-center rounded hover:bg-blue-700"
+              class="btn btn-primary w-full"
             >
               添加物品
             </router-link>
             <router-link
               to="/drawers"
-              class="block w-full px-4 py-3 bg-green-600 text-white text-center rounded hover:bg-green-700"
+              class="btn btn-success w-full"
             >
               创建抽屉
             </router-link>
             <router-link
               to="/locations"
-              class="block w-full px-4 py-3 bg-purple-600 text-white text-center rounded hover:bg-purple-700"
+              class="btn w-full bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500"
             >
               管理地点
             </router-link>

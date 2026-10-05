@@ -8,6 +8,15 @@ const router: Router = Router();
 
 router.use(authMiddleware);
 
+// 权限判断：
+// 可见性：管理员可见全部；普通用户可见公开的（is_private=0）、自己创建的、以及历史数据（created_by 为空）
+// 修改权：仅管理员或创建者
+const canAccessDrawer = (drawer: any, req: any) =>
+  req.role === 'admin' || !drawer.is_private || !drawer.created_by || drawer.created_by === req.userId;
+
+const canModifyDrawer = (drawer: any, req: any) =>
+  req.role === 'admin' || !drawer.created_by || drawer.created_by === req.userId;
+
 // 生成二维码URL
 async function generateQRCodeImage(drawerId: number): Promise<string> {
   // 获取网站URL配置
@@ -22,16 +31,20 @@ async function generateQRCodeImage(drawerId: number): Promise<string> {
   return qrCodeImage;
 }
 
-// 获取所有抽屉
-router.get('/', (req, res) => {
+// 获取所有抽屉（普通用户仅返回公开的和自己的抽屉）
+router.get('/', (req: any, res) => {
   try {
+    const ownCondition = req.role === 'admin' ? '' : 'WHERE (d.is_private = 0 OR d.created_by = ? OR d.created_by IS NULL)';
+    const ownParams = req.role === 'admin' ? [] : [req.userId];
+
     const drawers = db.prepare(`
       SELECT d.*, l.name as location_name, u.username as creator_name
       FROM drawers d
       LEFT JOIN locations l ON d.location_id = l.id
       LEFT JOIN users u ON d.created_by = u.id
+      ${ownCondition}
       ORDER BY d.created_at DESC
-    `).all();
+    `).all(...ownParams);
     res.json(drawers);
   } catch (error) {
     console.error('获取抽屉列表错误:', error);
@@ -40,7 +53,7 @@ router.get('/', (req, res) => {
 });
 
 // 获取单个抽屉详情
-router.get('/:id', (req, res) => {
+router.get('/:id', (req: any, res) => {
   try {
     const { id } = req.params;
     const drawer: any = db.prepare(`
@@ -54,13 +67,19 @@ router.get('/:id', (req, res) => {
       return res.status(404).json({ error: '抽屉不存在' });
     }
 
-    // 获取抽屉中的物品
+    if (!canAccessDrawer(drawer, req)) {
+      return res.status(403).json({ error: '无权访问该抽屉' });
+    }
+
+    // 获取抽屉中的物品（普通用户不显示他人私有的物品）
+    const itemVisibility = req.role === 'admin' ? '' : 'AND (i.is_private = 0 OR i.created_by = ? OR i.created_by IS NULL)';
+    const itemParams = req.role === 'admin' ? [id] : [id, req.userId];
     const items = db.prepare(`
       SELECT i.*, ic.name as category_name
       FROM items i
       LEFT JOIN item_categories ic ON i.item_category_id = ic.id
-      WHERE i.drawer_id = ?
-    `).all(id);
+      WHERE i.drawer_id = ? ${itemVisibility}
+    `).all(...itemParams);
 
     drawer.items = items;
     res.json(drawer);
@@ -107,13 +126,19 @@ router.get('/qr/:qrCode', (req, res) => {
       return res.status(404).json({ error: '抽屉不存在' });
     }
 
-    // 获取抽屉中的物品
+    if (!canAccessDrawer(drawer, req)) {
+      return res.status(403).json({ error: '无权访问该抽屉' });
+    }
+
+    // 获取抽屉中的物品（普通用户不显示他人私有的物品）
+    const itemVisibility = req.role === 'admin' ? '' : 'AND (i.is_private = 0 OR i.created_by = ? OR i.created_by IS NULL)';
+    const itemParams = req.role === 'admin' ? [drawer.id] : [drawer.id, req.userId];
     const items = db.prepare(`
       SELECT i.*, ic.name as category_name
       FROM items i
       LEFT JOIN item_categories ic ON i.item_category_id = ic.id
-      WHERE i.drawer_id = ?
-    `).all(drawer.id);
+      WHERE i.drawer_id = ? ${itemVisibility}
+    `).all(...itemParams);
 
     drawer.items = items;
     res.json(drawer);
@@ -126,7 +151,7 @@ router.get('/qr/:qrCode', (req, res) => {
 // 创建抽屉
 router.post('/', async (req: any, res) => {
   try {
-    const { name, description, location_id, parent_id, image_url, image_data } = req.body;
+    const { name, description, location_id, parent_id, is_private, image_url, image_data } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: '抽屉名称不能为空' });
@@ -134,9 +159,9 @@ router.post('/', async (req: any, res) => {
 
     // 先创建抽屉记录，qr_code存储drawerId字符串
     const result = db.prepare(`
-      INSERT INTO drawers (name, description, qr_code, location_id, parent_id, image_url, image_data, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(name, description, '', location_id, parent_id, image_url, image_data, req.userId);
+      INSERT INTO drawers (name, description, qr_code, is_private, location_id, parent_id, image_url, image_data, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(name, description, '', is_private ? 1 : 0, location_id, parent_id, image_url, image_data, req.userId);
 
     const drawerId = Number(result.lastInsertRowid);
     
@@ -159,23 +184,31 @@ router.post('/', async (req: any, res) => {
 });
 
 // 更新抽屉
-router.put('/:id', (req, res) => {
+router.put('/:id', (req: any, res) => {
   try {
     const { id } = req.params;
-    const { name, description, location_id, parent_id, image_url, image_data } = req.body;
+    const { name, description, location_id, parent_id, is_private, image_url, image_data } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: '抽屉名称不能为空' });
     }
 
+    const existing: any = db.prepare('SELECT * FROM drawers WHERE id = ?').get(id);
+    if (!existing) {
+      return res.status(404).json({ error: '抽屉不存在' });
+    }
+    if (!canModifyDrawer(existing, req)) {
+      return res.status(403).json({ error: '无权修改该抽屉' });
+    }
+
     // 获取旧的地点ID
-    const oldDrawer: any = db.prepare('SELECT location_id FROM drawers WHERE id = ?').get(id);
+    const oldDrawer: any = existing;
 
     const result = db.prepare(`
       UPDATE drawers 
-      SET name = ?, description = ?, location_id = ?, parent_id = ?, image_url = ?, image_data = ?
+      SET name = ?, description = ?, location_id = ?, parent_id = ?, is_private = ?, image_url = ?, image_data = ?
       WHERE id = ?
-    `).run(name, description, location_id, parent_id, image_url, image_data, id);
+    `).run(name, description, location_id, parent_id, is_private ? 1 : 0, image_url, image_data, id);
 
     if (result.changes === 0) {
       return res.status(404).json({ error: '抽屉不存在' });
@@ -215,15 +248,19 @@ router.delete('/:id', authMiddleware, adminOnly, (req, res) => {
 });
 
 // 重新生成抽屉二维码
-router.post('/:id/regenerate-qr', async (req, res) => {
+router.post('/:id/regenerate-qr', async (req: any, res) => {
   try {
     const { id } = req.params;
     
     // 检查抽屉是否存在
-    const drawer = db.prepare('SELECT id FROM drawers WHERE id = ?').get(id);
+    const drawer: any = db.prepare('SELECT * FROM drawers WHERE id = ?').get(id);
 
     if (!drawer) {
       return res.status(404).json({ error: '抽屉不存在' });
+    }
+
+    if (!canAccessDrawer(drawer, req)) {
+      return res.status(403).json({ error: '无权访问该抽屉' });
     }
 
     // 生成二维码图片 - 使用URL

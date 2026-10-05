@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
   }
@@ -16,8 +16,10 @@
     @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors;
   }
 
-  /* 输入框暗色样式 */
-  input, textarea, select {
+  /* 未使用 .input 的原生控件兜底暗色样式 */
+  input,
+  textarea,
+  select {
     @apply dark:bg-gray-700 dark:text-white dark:border-gray-600;
   }
 
@@ -35,50 +37,158 @@
   }
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.card {
-  padding: 2em;
-}
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@layer components {
+  /* ===== 按钮：btn + 颜色变体 + 尺寸变体 =====
+     用法: class="btn btn-primary" / class="btn btn-secondary btn-sm" */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1 rounded-md border border-transparent text-sm font-medium whitespace-nowrap cursor-pointer select-none transition-colors
+      focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
+      disabled:opacity-50 disabled:cursor-not-allowed;
+    padding: 0.5rem 1rem;
   }
-  a:hover {
-    color: #747bff;
+  .btn-primary {
+    @apply text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600;
   }
-  button {
-    background-color: #f9f9f9;
+  .btn-secondary {
+    @apply bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600;
+  }
+  .btn-danger {
+    @apply text-white bg-red-600 hover:bg-red-700 focus:ring-red-500;
+  }
+  .btn-success {
+    @apply text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500;
+  }
+  .btn-warning {
+    @apply text-white bg-orange-500 hover:bg-orange-600 focus:ring-orange-500;
+  }
+  .btn-ghost {
+    @apply text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700;
+  }
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+  }
+
+  /* ===== 表格/列表中的文字操作按钮：link-btn + 颜色变体 =====
+     用法: class="link-btn link-primary" */
+  .link-btn {
+    @apply px-2 py-1 text-xs sm:text-sm whitespace-nowrap cursor-pointer;
+  }
+  .link-primary {
+    @apply text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300;
+  }
+  .link-success {
+    @apply text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300;
+  }
+  .link-danger {
+    @apply text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300;
+  }
+  .link-warning {
+    @apply text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300;
+  }
+  .link-neutral {
+    @apply text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200;
+  }
+
+  /* ===== 表单控件 ===== */
+  .input {
+    @apply block w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+      focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+  }
+  .checkbox {
+    @apply h-4 w-4 rounded border-gray-300 dark:border-gray-600 accent-blue-600 cursor-pointer;
+  }
+  /* 筛选栏里的紧凑行内控件（配合 w-auto 等覆盖） */
+  .input-inline {
+    @apply rounded-md border border-gray-300 dark:border-gray-600 shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+      focus:border-blue-500 focus:ring-blue-500;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* ===== 布局与容器 ===== */
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6;
+  }
+  .page-title {
+    @apply text-2xl font-semibold text-gray-900 dark:text-white;
+  }
+  .card {
+    @apply bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden;
+  }
+  .filter-bar {
+    @apply mb-4 card p-3 sm:p-4;
+  }
+  .section-box {
+    @apply p-3 sm:p-4 rounded-lg border;
+  }
+
+  /* ===== 徽标 =====
+     用法: class="badge badge-green" */
+  .badge {
+    @apply inline-flex items-center px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap;
+  }
+  .badge-gray {
+    @apply bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300;
+  }
+  .badge-green {
+    @apply bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300;
+  }
+  .badge-red {
+    @apply bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300;
+  }
+  .badge-blue {
+    @apply bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300;
+  }
+  .badge-yellow {
+    @apply bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300;
+  }
+
+  /* ===== 表格 ===== */
+  .th-cell {
+    @apply px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider;
+  }
+  .td-cell {
+    @apply px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-300;
+  }
+  /* 可排序表头 */
+  .sortable-th {
+    @apply cursor-pointer select-none hover:text-gray-800 dark:hover:text-gray-100 whitespace-nowrap;
+  }
+  .th-sorted {
+    @apply text-blue-600 dark:text-blue-400;
+  }
+
+  /* ===== 模态框（配合 components/BaseModal.vue） ===== */
+  .modal-overlay {
+    @apply fixed inset-0 bg-gray-600 bg-opacity-50 z-50 p-4 overflow-y-auto;
+  }
+  .modal-panel {
+    @apply relative mx-auto w-full border shadow-xl rounded-lg bg-white dark:bg-gray-800 flex flex-col overflow-hidden;
+    max-height: calc(100vh - 2rem);
+  }
+  /* 模态框内容滚动区（min-h-0 是 flex 子元素 overflow 生效的关键；
+     同时给显式 max-height，双保险确保一定能滚动） */
+  .modal-body {
+    @apply overflow-y-auto min-h-0;
+    max-height: calc(100vh - 10rem);
+  }
+
+  /* 细滚动条（让桌面端横向滚动更容易发现） */
+  .scroll-thin::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-700 rounded-full;
   }
 }

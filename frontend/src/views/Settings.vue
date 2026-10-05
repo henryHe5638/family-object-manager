@@ -1,13 +1,13 @@
 <template>
   <Layout>
     <div class="px-4 sm:px-0">
-      <div class="sm:flex sm:items-center sm:justify-between mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">系统设置</h1>
+      <div class="page-header">
+        <h1 class="page-title">系统设置</h1>
       </div>
 
       <div class="mt-8 space-y-6">
         <!-- 游客注册设置 -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div class="card p-6">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-lg font-medium text-gray-900 dark:text-white">允许游客注册</h3>
@@ -22,7 +22,7 @@
         </div>
 
         <!-- 网站地址设置 -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div class="card p-6">
           <div>
             <label for="site_url" class="block text-lg font-medium text-gray-900 dark:text-white">网站地址</label>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 mb-4">用于生成二维码跳转链接，请填写完整的网址（如: https://example.com）</p>
@@ -32,12 +32,9 @@
                 v-model="siteUrl"
                 type="url"
                 placeholder="https://example.com"
-                class="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 dark:text-white bg-white dark:bg-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                class="input"
               />
-              <button
-                @click="saveSiteUrl"
-                class="inline-flex items-center rounded-md bg-blue-600 dark:bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 dark:hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-              >
+              <button @click="saveSiteUrl" class="btn btn-primary">
                 保存
               </button>
             </div>
@@ -45,45 +42,45 @@
         </div>
 
         <!-- 修改密码 -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div class="card p-6">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">修改密码</h3>
           <form @submit.prevent="changePassword" class="space-y-4">
             <div>
-              <label for="old_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">当前密码</label>
+              <label for="old_password" class="form-label">当前密码</label>
               <input
                 id="old_password"
                 v-model="passwordForm.oldPassword"
                 type="password"
                 required
-                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                class="input mt-1"
               />
             </div>
             <div>
-              <label for="new_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">新密码</label>
+              <label for="new_password" class="form-label">新密码</label>
               <input
                 id="new_password"
                 v-model="passwordForm.newPassword"
                 type="password"
                 required
                 minlength="6"
-                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                class="input mt-1"
               />
               <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">密码长度至少 6 位</p>
             </div>
             <div>
-              <label for="confirm_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">确认新密码</label>
+              <label for="confirm_password" class="form-label">确认新密码</label>
               <input
                 id="confirm_password"
                 v-model="passwordForm.confirmPassword"
                 type="password"
                 required
-                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                class="input mt-1"
               />
             </div>
             <div class="flex justify-end">
               <button
                 type="submit"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600"
+                class="btn btn-primary"
               >
                 修改密码
               </button>
@@ -110,7 +107,7 @@
         </div>
 
         <!-- 数据管理 -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div class="card p-6">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">数据管理</h3>
           <div class="space-y-4">
             <!-- 导出数据 -->
@@ -122,9 +119,9 @@
               <button
                 @click="exportDatabase"
                 :disabled="isExporting"
-                class="mt-3 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="mt-3 btn btn-secondary"
               >
-                <svg v-if="isExporting" class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg v-if="isExporting" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -148,9 +145,9 @@
               <button
                 @click="triggerFileInput"
                 :disabled="isImporting"
-                class="mt-3 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="mt-3 btn btn-secondary"
               >
-                <svg v-if="isImporting" class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg v-if="isImporting" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -166,7 +163,7 @@
               </div>
               <button
                 @click="showResetConfirm"
-                class="mt-3 inline-flex items-center px-4 py-2 border border-red-300 dark:border-red-600 rounded-md shadow-sm text-sm font-medium text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                class="mt-3 btn btn-danger"
               >
                 重置数据库
               </button>
@@ -176,43 +173,45 @@
       </div>
 
       <!-- 重置确认对话框 -->
-      <div v-if="showResetDialog" class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50" @click="closeResetDialog">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-md shadow-lg rounded-md bg-white dark:bg-gray-800" @click.stop>
-          <div class="text-center">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30">
-              <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h3 class="mt-5 text-lg font-medium text-gray-900 dark:text-white">确认重置数据库？</h3>
-            <div class="mt-2 px-7 py-3">
-              <p class="text-sm text-gray-500 dark:text-gray-400">此操作将删除所有物品、抽屉、地点和类目数据，且无法恢复。</p>
-              <p class="mt-2 text-sm font-semibold text-red-600 dark:text-red-400">请在下方输入"确认重置"以继续</p>
-              <input
-                v-model="resetConfirmText"
-                type="text"
-                placeholder="输入：确认重置"
-                class="mt-3 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm px-3 py-2 border"
-              />
-            </div>
-            <div class="flex gap-3 px-4 py-3">
-              <button
-                @click="closeResetDialog"
-                class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
-              >
-                取消
-              </button>
-              <button
-                @click="confirmReset"
-                :disabled="resetConfirmText !== '确认重置' || isResetting"
-                class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {{ isResetting ? '重置中...' : '确认重置' }}
-              </button>
-            </div>
+      <BaseModal
+        :show="showResetDialog"
+        title="确认重置数据库？"
+        max-width="max-w-md"
+        @close="closeResetDialog"
+      >
+        <div class="text-center">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30">
+            <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div class="mt-2 px-7 py-3">
+            <p class="text-sm text-gray-500 dark:text-gray-400">此操作将删除所有物品、抽屉、地点和类目数据，且无法恢复。</p>
+            <p class="mt-2 text-sm font-semibold text-red-600 dark:text-red-400">请在下方输入"确认重置"以继续</p>
+            <input
+              v-model="resetConfirmText"
+              type="text"
+              placeholder="输入：确认重置"
+              class="input mt-3"
+            />
+          </div>
+          <div class="flex gap-3 px-4 py-3">
+            <button
+              @click="closeResetDialog"
+              class="btn btn-secondary flex-1"
+            >
+              取消
+            </button>
+            <button
+              @click="confirmReset"
+              :disabled="resetConfirmText !== '确认重置' || isResetting"
+              class="btn btn-danger flex-1"
+            >
+              {{ isResetting ? '重置中...' : '确认重置' }}
+            </button>
           </div>
         </div>
-      </div>
+      </BaseModal>
     </div>
   </Layout>
 </template>
@@ -220,6 +219,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue';
 import Layout from '../components/Layout.vue';
+import BaseModal from '../components/BaseModal.vue';
 import { settingsApi, authApi } from '../api/modules';
 import axios from 'axios';
 

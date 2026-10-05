@@ -1,26 +1,26 @@
 <template>
   <Layout>
     <div class="px-4 sm:px-0">
-      <div class="sm:flex sm:items-center sm:justify-between mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">扫码识别</h1>
+      <div class="page-header">
+        <h1 class="page-title">扫码识别</h1>
         <button
           @click="startScanning"
           v-if="!isScanning"
-          class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+          class="btn btn-primary"
         >
           开始扫码
         </button>
         <button
           @click="stopScanning"
           v-else
-          class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+          class="btn btn-danger"
         >
           停止扫码
         </button>
       </div>
 
       <!-- 摄像头视频流 -->
-      <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+      <div class="card mb-6">
         <div class="p-6">
           <div class="relative">
             <video
@@ -52,27 +52,27 @@
               <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
               </svg>
-              <h3 class="mt-4 text-lg font-medium text-gray-900">摄像头扫码识别</h3>
-              <p class="mt-2 text-sm text-gray-500">
+              <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">摄像头扫码识别</h3>
+              <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 点击"开始扫码"按钮启用摄像头，扫描二维码获取物品或抽屉信息
               </p>
             </div>
           </div>
 
           <!-- 扫码结果显示 -->
-          <div v-if="scanResult" class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h3 class="text-lg font-medium text-green-800 mb-2">扫码结果</h3>
-            <p class="text-sm text-green-700 mb-3">检测到内容: {{ scanResult }}</p>
+          <div v-if="scanResult" class="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <h3 class="text-lg font-medium text-green-800 dark:text-green-200 mb-2">扫码结果</h3>
+            <p class="text-sm text-green-700 dark:text-green-300 mb-3">检测到内容: {{ scanResult }}</p>
             <div class="flex space-x-3">
               <button
                 @click="handleScanResult"
-                class="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                class="btn btn-success"
               >
                 查看详情
               </button>
               <button
                 @click="clearResult"
-                class="px-4 py-2 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                class="btn btn-secondary"
               >
                 清除结果
               </button>
@@ -80,15 +80,15 @@
           </div>
 
           <!-- 错误消息显示 -->
-          <div v-if="errorMessage" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <h3 class="text-lg font-medium text-red-800 mb-2">扫码错误</h3>
-            <p class="text-sm text-red-700">{{ errorMessage }}</p>
+          <div v-if="errorMessage" class="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <h3 class="text-lg font-medium text-red-800 dark:text-red-400 mb-2">扫码错误</h3>
+            <p class="text-sm text-red-700 dark:text-red-300">{{ errorMessage }}</p>
           </div>
 
           <!-- 使用说明 -->
-          <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 class="text-lg font-medium text-blue-800 mb-2">使用说明</h3>
-            <ul class="text-sm text-blue-700 space-y-1">
+          <div class="mt-6 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <h3 class="text-lg font-medium text-blue-800 dark:text-blue-200 mb-2">使用说明</h3>
+            <ul class="text-sm text-blue-700 dark:text-blue-300 space-y-1">
               <li>• 确保设备摄像头权限已开启</li>
               <li>• 将二维码放在扫码框内，保持稳定</li>
               <li>• 系统会自动识别二维码内容并跳转到对应页面</li>

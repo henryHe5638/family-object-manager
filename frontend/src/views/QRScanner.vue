@@ -1,13 +1,15 @@
 <template>
   <Layout>
     <div class="px-4 sm:px-0">
-      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">扫描二维码</h1>
+      <div class="page-header">
+        <h1 class="page-title">扫描二维码</h1>
+      </div>
       
       <div v-if="loading" class="text-center py-8">
         <p class="text-gray-600 dark:text-gray-400">加载中...</p>
       </div>
 
-      <div v-else-if="drawer" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+      <div v-else-if="drawer" class="card p-6">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">{{ drawer.name }}</h2>
         <p class="text-gray-600 dark:text-gray-400 mb-4">{{ drawer.description || '无描述' }}</p>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">地点: {{ drawer.location_name || '无' }}</p>

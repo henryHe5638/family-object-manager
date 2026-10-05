@@ -51,8 +51,8 @@ router.get('/', (req, res) => {
 // 导出数据库（需要管理员权限）- 必须在 /:key 之前定义
 router.get('/export-database', authMiddleware, adminOnly, (req: any, res) => {
   try {
-    const dbPath = path.join(__dirname, '../../database.sqlite');
-    
+    const dbPath = process.env.DB_PATH || path.join(__dirname, '../../database.sqlite');
+
     if (!fs.existsSync(dbPath)) {
       return res.status(404).json({ error: '数据库文件不存在' });
     }
@@ -136,8 +136,8 @@ router.post('/import-database', authMiddleware, adminOnly, dbUpload.single('data
     }
 
     const uploadedFilePath = req.file.path;
-    const dbPath = path.join(__dirname, '../../database.sqlite');
-    const backupPath = path.join(__dirname, `../../database.backup.${Date.now()}.sqlite`);
+    const dbPath = process.env.DB_PATH || path.join(__dirname, '../../database.sqlite');
+    const backupPath = `${dbPath}.backup.${Date.now()}`;
 
     // 备份当前数据库
     if (fs.existsSync(dbPath)) {
@@ -164,7 +164,7 @@ router.post('/import-database', authMiddleware, adminOnly, dbUpload.single('data
 router.post('/reset-database', authMiddleware, adminOnly, (req: any, res) => {
   try {
     // 清空所有数据表，但保留用户和设置
-    const tables = ['items', 'drawers', 'locations', 'item_categories'];
+    const tables = ['items', 'drawers', 'locations', 'item_category_map', 'item_categories'];
     
     tables.forEach(table => {
       db.prepare(`DELETE FROM ${table}`).run();

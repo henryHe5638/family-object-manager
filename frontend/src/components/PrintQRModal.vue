@@ -2,7 +2,7 @@
   <Teleport to="body">
     <div class="print-qr-modal" v-if="visible" @click.stop>
       <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[60]" @click="close">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-md shadow-lg rounded-md bg-white dark:bg-gray-800" @click.stop>
+        <div class="modal-panel top-20 p-5 w-11/12 max-w-md shadow-lg rounded-md" @click.stop>
           <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-white">打印二维码设置</h3>
         
         <!-- 预览区域 -->
@@ -19,14 +19,14 @@
 
         <!-- 纸张大小选择 -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">纸张大小</label>
+          <label class="form-label mb-2">纸张大小</label>
           <div class="space-y-2">
             <label v-for="size in paperSizes" :key="size.name" class="flex items-center">
               <input 
                 type="radio" 
                 :value="size.name" 
                 v-model="selectedPaperSize"
-                class="mr-2"
+                class="checkbox mr-2"
               />
               <span class="text-sm text-gray-900 dark:text-gray-300">{{ size.label }} ({{ size.width }}mm × {{ size.height }}mm)</span>
             </label>
@@ -35,7 +35,7 @@
                 type="radio" 
                 value="custom" 
                 v-model="selectedPaperSize"
-                class="mr-2"
+                class="checkbox mr-2"
               />
               <span class="text-sm text-gray-900 dark:text-gray-300">自定义大小</span>
             </label>
@@ -44,24 +44,24 @@
           <!-- 自定义尺寸输入 -->
           <div v-if="selectedPaperSize === 'custom'" class="mt-3 grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">宽度 (mm)</label>
+              <label class="form-label !text-xs">宽度 (mm)</label>
               <input 
                 type="number" 
                 v-model.number="customWidth"
                 min="10"
                 max="500"
-                class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                class="input mt-1"
                 placeholder="宽度"
               />
             </div>
             <div>
-              <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">高度 (mm)</label>
+              <label class="form-label !text-xs">高度 (mm)</label>
               <input 
                 type="number" 
                 v-model.number="customHeight"
                 min="10"
                 max="500"
-                class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                class="input mt-1"
                 placeholder="高度"
               />
             </div>
@@ -70,13 +70,13 @@
 
         <!-- 打印选项 -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">打印选项</label>
+          <label class="form-label mb-2">打印选项</label>
           <div class="space-y-2">
             <label class="flex items-center">
               <input 
                 type="checkbox" 
                 v-model="showTitle"
-                class="mr-2"
+                class="checkbox mr-2"
               />
               <span class="text-sm text-gray-900 dark:text-gray-300">显示标题</span>
             </label>
@@ -84,7 +84,7 @@
               <input 
                 type="checkbox" 
                 v-model="showBorder"
-                class="mr-2"
+                class="checkbox mr-2"
               />
               <span class="text-sm text-gray-900 dark:text-gray-300">显示边框</span>
             </label>
@@ -93,7 +93,7 @@
 
         <!-- 二维码大小调节 -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">二维码大小</label>
+          <label class="form-label mb-2">二维码大小</label>
           <input 
             type="range" 
             min="100" 
@@ -112,7 +112,7 @@
         <div class="flex justify-end space-x-3">
           <button
             @click.stop="close"
-            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            class="btn btn-secondary"
           >
             取消
           </button>
@@ -124,13 +124,13 @@
           </button>
           <button
             @click.stop="previewPrint"
-            class="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-700 dark:hover:bg-blue-600"
+            class="btn btn-primary"
           >
             预览
           </button>
           <button
             @click.stop="confirmPrint"
-            class="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md text-sm font-medium hover:bg-green-700 dark:hover:bg-green-600"
+            class="btn btn-success"
           >
             打印
           </button>

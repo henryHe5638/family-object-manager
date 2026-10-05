@@ -95,7 +95,7 @@ export const drawerApi = {
 };
 
 export const itemApi = {
-  getAll: () => api.get('/items'),
+  getAll: (params?: { status?: string }) => api.get('/items', { params }),
   getById: (id: number) => api.get(`/items/${id}`),
   getExpiring: (days: number = 30) => api.get(`/items/expiring?days=${days}`),
   getExpired: () => api.get('/items/expired'),
@@ -103,6 +103,7 @@ export const itemApi = {
   getByQRCode: (qrCode: string) => api.get(`/items/qr/${qrCode}`),
   create: (data: any) => api.post('/items', data),
   update: (id: number, data: any) => api.put(`/items/${id}`, data),
+  updateStatus: (id: number, status: string) => api.patch(`/items/${id}/status`, { status }),
   delete: (id: number) => api.delete(`/items/${id}`),
 };
 

@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
     <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center min-w-0">
             <div class="flex-shrink-0 flex items-center">
@@ -75,7 +75,7 @@
             <!-- 主题切换按钮 -->
             <button
               @click="themeStore.toggleTheme()"
-              class="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              class="btn btn-ghost"
               :title="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'"
             >
               <!-- 太阳图标 (亮色模式) -->
@@ -91,11 +91,11 @@
             <div class="hidden sm:flex sm:items-center sm:space-x-4">
               <span class="text-sm text-gray-700 dark:text-gray-300">
                 {{ authStore.user?.username }}
-                <span v-if="authStore.isAdmin" class="ml-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">管理员</span>
+                <span v-if="authStore.isAdmin" class="badge badge-blue ml-1">管理员</span>
               </span>
               <button
                 @click="handleLogout"
-                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                class="btn btn-danger"
               >
                 退出登录
               </button>
@@ -103,9 +103,9 @@
             
             <!-- 移动端菜单按钮 -->
             <div class="lg:hidden">
-              <button 
+              <button
                 @click="showMobileMenu = !showMobileMenu"
-                class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+                class="btn btn-ghost"
               >
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path v-if="!showMobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -190,12 +190,12 @@
         <div class="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
           <div class="flex items-center px-4">
             <span class="text-base font-medium text-gray-800 dark:text-gray-200">{{ authStore.user?.username }}</span>
-            <span v-if="authStore.isAdmin" class="ml-3 text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">管理员</span>
+            <span v-if="authStore.isAdmin" class="badge badge-blue ml-3">管理员</span>
           </div>
           <div class="mt-3 px-4">
             <button
               @click="handleLogout"
-              class="w-full text-left px-4 py-2 text-base font-medium text-white bg-red-600 hover:bg-red-700 rounded-md"
+              class="btn btn-danger w-full justify-start"
             >
               退出登录
             </button>
@@ -203,7 +203,7 @@
         </div>
       </div>
     </nav>
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <main class="max-w-[1600px] mx-auto py-6 sm:px-6 lg:px-8">
       <slot />
     </main>
   </div>

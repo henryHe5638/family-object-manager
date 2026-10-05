@@ -16,13 +16,13 @@
 
       <div v-else-if="location" class="space-y-6">
         <!-- 地点信息卡片 -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div class="card p-6">
           <div class="flex justify-between items-start mb-4">
             <div>
               <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ location.name }}</h1>
               <p v-if="location.description" class="mt-2 text-gray-600 dark:text-gray-400">{{ location.description }}</p>
             </div>
-            <router-link :to="`/locations`" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600">
+            <router-link :to="`/locations`" class="btn btn-secondary btn-sm">
               编辑
             </router-link>
           </div>
@@ -48,7 +48,7 @@
         </div>
 
         <!-- 抽屉列表 -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6">
+        <div class="card p-4 sm:p-6">
           <h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">该地点的抽屉</h2>
           <div v-if="drawers.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
             <router-link v-for="drawer in drawers" :key="drawer.id" :to="`/drawers/${drawer.id}`" class="block bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
@@ -70,7 +70,7 @@
         </div>
 
         <!-- 物品列表 -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6">
+        <div class="card p-4 sm:p-6">
           <h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">该地点的物品</h2>
           <div v-if="items.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
             <router-link v-for="item in items" :key="item.id" :to="`/items/${item.id}`" class="block bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
@@ -95,7 +95,7 @@
               </div>
             </router-link>
           </div>
-          <div v-else class="text-center py-8 text-gray-500">
+          <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
             该地点暂无物品
           </div>
         </div>
