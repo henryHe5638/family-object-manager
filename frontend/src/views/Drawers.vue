@@ -66,7 +66,53 @@
       </div>
 
       <!-- 列表视图 -->
-      <div v-if="viewMode === 'list'" class="card">
+      <!-- 手机端卡片列表 -->
+      <div v-if="viewMode === 'list'" class="sm:hidden space-y-3">
+        <div v-for="drawer in filteredAndSortedDrawers" :key="drawer.id" class="card p-3">
+          <router-link :to="`/drawers/${drawer.id}`" class="flex items-start gap-3">
+            <img
+              v-if="drawer.image_url"
+              :src="getImageUrl(drawer.image_url)"
+              alt="抽屉图片"
+              class="h-20 w-20 object-contain rounded bg-gray-100 dark:bg-gray-700 shrink-0"
+            />
+            <div v-else class="h-20 w-20 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center shrink-0">
+              <svg class="h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-medium text-lg text-gray-900 dark:text-white truncate">
+                  {{ drawer.name }}
+                  <span v-if="drawer.is_private" title="私人抽屉" class="cursor-default">🔒</span>
+                </span>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                地点：{{ drawer.location_name || "无" }}
+              </p>
+              <p v-if="drawer.description" class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                {{ drawer.description }}
+              </p>
+            </div>
+          </router-link>
+          <div class="flex space-x-2 mt-3">
+            <router-link :to="`/drawers/${drawer.id}`" class="btn btn-primary btn-sm flex-1">查看</router-link>
+            <button @click="showQRCode(drawer)" class="btn btn-secondary btn-sm flex-1">二维码</button>
+            <button @click="editDrawer(drawer)" class="btn btn-secondary btn-sm flex-1">编辑</button>
+            <button
+              v-if="authStore.isAdmin"
+              @click="deleteDrawer(drawer.id)"
+              class="btn btn-danger btn-sm flex-1"
+            >
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 平板及以上表格 -->
+      <div v-if="viewMode === 'list'" class="card hidden sm:block">
         <div class="overflow-x-auto scroll-thin">
           <div class="min-w-[700px]">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

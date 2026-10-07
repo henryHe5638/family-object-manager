@@ -38,12 +38,20 @@
       <div class="card p-6">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-medium text-gray-900 dark:text-white">抽屉中的物品</h2>
-          <button
-            @click="openAddItemModal"
-            class="btn btn-primary"
-          >
-            + 添加物品
-          </button>
+          <div class="flex gap-2">
+            <button
+              @click="openAddItemModal"
+              class="btn btn-primary"
+            >
+              + 添加物品
+            </button>
+            <button
+              @click="openBatchModal"
+              class="btn btn-secondary"
+            >
+              批量添加
+            </button>
+          </div>
         </div>
         
         <div v-if="items.length > 0" class="space-y-3">
@@ -110,40 +118,91 @@
         </div>
       </div>
 
-      <!-- 二维码弹窗 -->
-      <BaseModal
-        :show="showQR"
-        :title="`${drawer?.name} 的二维码`"
-        max-width="max-w-md"
+      <!-- 二维码弹窗（复用打印二维码弹窗，支持下载 PNG/打印） -->
+      <PrintQRModal
+        :visible="showQR"
+        :qr-code-image="qrCodeImage"
+        :title="`${drawer?.name || ''} 的二维码`"
         @close="showQR = false"
+      />
+
+      <!-- 批量添加物品弹窗 -->
+      <BaseModal
+        :show="showBatchModal"
+        title="批量添加物品到抽屉"
+        max-width="max-w-lg"
+        @close="showBatchModal = false"
       >
-        <div class="text-center">
-          <div v-if="qrLoading" class="py-8 text-gray-400">二维码加载中...</div>
-          <img v-else-if="qrCodeImage" :src="qrCodeImage" alt="QR Code" class="mx-auto mb-4">
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">扫描二维码访问抽屉</p>
-          <div class="flex justify-center gap-2 flex-wrap">
+        <div v-if="batchLoading" class="py-8 text-center text-gray-400">加载中...</div>
+        <template v-else>
+          <div class="flex items-center space-x-2 mb-3">
+            <input
+              v-model="batchFilter"
+              type="text"
+              class="input-inline flex-1"
+              placeholder="搜索物品名称..."
+            />
+          </div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="flex items-center text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+              <input
+                type="checkbox"
+                class="checkbox mr-2"
+                :checked="isAllFilteredSelected"
+                @change="toggleSelectAllFiltered"
+              />
+              全选
+            </label>
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              已选 {{ batchSelected.length }} / {{ filteredBatchCandidates.length }}
+            </span>
+          </div>
+          <div v-if="filteredBatchCandidates.length === 0" class="py-8 text-center text-gray-500 dark:text-gray-400">
+            {{ batchCandidates.length === 0 ? "没有可添加的物品" : "没有匹配的物品" }}
+          </div>
+          <div v-else class="space-y-2">
+            <label
+              v-for="item in filteredBatchCandidates"
+              :key="item.id"
+              class="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                class="checkbox shrink-0"
+                :checked="batchSelected.includes(item.id)"
+                @change="toggleBatchSelect(item.id)"
+              />
+              <img
+                v-if="item.image_data || item.image_url"
+                :src="getImageUrl(item.image_url, item.image_data)"
+                :alt="item.name"
+                class="h-12 w-12 object-contain rounded bg-white dark:bg-gray-600 shrink-0"
+              />
+              <div v-else class="h-12 w-12 bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center shrink-0">
+                <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ item.name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {{ [item.category_name, item.location_name, item.drawer_name && `抽屉：${item.drawer_name}`].filter(Boolean).join(" · ") || "-" }}
+                </p>
+              </div>
+            </label>
+          </div>
+          <div class="flex justify-end space-x-3 pt-4">
+            <button type="button" @click="showBatchModal = false" class="btn btn-secondary">取消</button>
             <button
-              @click="downloadQR"
-              :disabled="!qrCodeImage"
+              type="button"
+              @click="confirmBatchAdd"
+              :disabled="batchSelected.length === 0 || batchSubmitting"
               class="btn btn-primary"
             >
-              下载二维码
-            </button>
-            <button
-              @click="printQR"
-              :disabled="!qrCodeImage"
-              class="btn btn-secondary"
-            >
-              打印
-            </button>
-            <button
-              @click="showQR = false"
-              class="btn btn-secondary"
-            >
-              关闭
+              {{ batchSubmitting ? "添加中..." : `确认添加 (${batchSelected.length})` }}
             </button>
           </div>
-        </div>
+        </template>
       </BaseModal>
 
       <!-- 添加/编辑物品弹窗（共享组件，锁定到当前抽屉） -->
@@ -160,11 +219,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Layout from '../components/Layout.vue';
 import BaseModal from '../components/BaseModal.vue';
 import ItemFormModal from '../components/ItemFormModal.vue';
+import PrintQRModal from '../components/PrintQRModal.vue';
 import { drawerApi, itemApi } from '../api/modules';
 
 const route = useRoute();
@@ -172,7 +232,19 @@ const drawer = ref<any>(null);
 const items = ref<any[]>([]);
 const showQR = ref(false);
 const qrCodeImage = ref('');
-const qrLoading = ref(false);
+
+// 打开二维码弹窗并加载二维码（复用打印二维码弹窗，数据现取）
+const openQR = async () => {
+  qrCodeImage.value = '';
+  try {
+    const res: any = await drawerApi.getQRCode(Number(route.params.id));
+    qrCodeImage.value = res.qrCodeImage || res.data?.qrCodeImage || '';
+    showQR.value = true;
+  } catch (error) {
+    console.error('加载二维码失败:', error);
+    alert('加载二维码失败');
+  }
+};
 
 // 物品状态展示配置
 const STATUS_META: Record<string, { text: string; badgeClass: string }> = {
@@ -202,30 +274,84 @@ const getImageUrl = (imageUrl: string, imageData?: string) => {
   return `${baseUrl}${imageUrl}`;
 };
 
-// 打开二维码弹窗并加载二维码
-const openQR = async () => {
-  qrLoading.value = true;
-  qrCodeImage.value = '';
-  showQR.value = true;
+// 批量添加物品
+const showBatchModal = ref(false);
+const batchLoading = ref(false);
+const batchSubmitting = ref(false);
+const batchCandidates = ref<any[]>([]);
+const batchSelected = ref<number[]>([]);
+const batchFilter = ref('');
+
+const openBatchModal = async () => {
+  batchSelected.value = [];
+  batchFilter.value = '';
+  batchCandidates.value = [];
+  showBatchModal.value = true;
+  batchLoading.value = true;
   try {
-    const res: any = await drawerApi.getQRCode(Number(route.params.id));
-    qrCodeImage.value = res.qrCodeImage || res.data?.qrCodeImage || '';
+    const res: any = await itemApi.getAll();
+    const all = res.data || res;
+    const drawerId = Number(route.params.id);
+    // 排除已在当前抽屉中的物品
+    batchCandidates.value = (all || []).filter((it: any) => it.drawer_id !== drawerId);
   } catch (error) {
-    console.error('加载二维码失败:', error);
+    console.error('加载物品列表失败:', error);
+    alert('加载物品列表失败');
   } finally {
-    qrLoading.value = false;
+    batchLoading.value = false;
   }
 };
 
-// 下载二维码图片
-const downloadQR = () => {
-  if (!qrCodeImage.value) return;
-  const a = document.createElement('a');
-  a.href = qrCodeImage.value;
-  a.download = `抽屉二维码-${drawer.value?.name || drawer.value?.id}.png`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+const filteredBatchCandidates = computed(() => {
+  const q = batchFilter.value.trim().toLowerCase();
+  if (!q) return batchCandidates.value;
+  return batchCandidates.value.filter((it: any) =>
+    (it.name || '').toString().toLowerCase().includes(q)
+  );
+});
+
+const isAllFilteredSelected = computed(() => {
+  const list = filteredBatchCandidates.value;
+  return list.length > 0 && list.every((it: any) => batchSelected.value.includes(it.id));
+});
+
+const toggleBatchSelect = (id: number) => {
+  const idx = batchSelected.value.indexOf(id);
+  if (idx >= 0) {
+    batchSelected.value.splice(idx, 1);
+  } else {
+    batchSelected.value.push(id);
+  }
+};
+
+const toggleSelectAllFiltered = () => {
+  const list = filteredBatchCandidates.value;
+  if (isAllFilteredSelected.value) {
+    const ids = new Set(list.map((it: any) => it.id));
+    batchSelected.value = batchSelected.value.filter((id) => !ids.has(id));
+  } else {
+    const existing = new Set(batchSelected.value);
+    list.forEach((it: any) => existing.add(it.id));
+    batchSelected.value = Array.from(existing);
+  }
+};
+
+const confirmBatchAdd = async () => {
+  const drawerId = Number(route.params.id);
+  batchSubmitting.value = true;
+  try {
+    // 现有 API 只有单条更新，逐条更新 drawer_id
+    for (const id of batchSelected.value) {
+      await itemApi.update(id, { drawer_id: drawerId });
+    }
+    showBatchModal.value = false;
+    await loadDrawer();
+  } catch (error: any) {
+    console.error('批量添加失败:', error);
+    alert(error.response?.data?.error || '批量添加失败');
+  } finally {
+    batchSubmitting.value = false;
+  }
 };
 const showItemModal = ref(false);
 const editingItem = ref<any>(null);
@@ -249,33 +375,6 @@ const loadDrawer = async () => {
     items.value = data.items || [];
   } catch (error) {
     console.error('加载抽屉失败:', error);
-  }
-};
-
-const printQR = () => {
-  if (qrCodeImage.value) {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      const html = `
-        <html>
-          <head>
-            <title>打印二维码 - ${drawer.value?.name}</title>
-            <style>
-              body { text-align: center; padding: 20px; }
-              img { max-width: 400px; }
-              h2 { margin-bottom: 20px; }
-            </style>
-          </head>
-          <body>
-            <h2>${drawer.value?.name}</h2>
-            <img src="${qrCodeImage.value}" />
-          </body>
-        </html>
-      `;
-      printWindow.document.write(html);
-      printWindow.document.close();
-      setTimeout(() => printWindow.print(), 100);
-    }
   }
 };
 

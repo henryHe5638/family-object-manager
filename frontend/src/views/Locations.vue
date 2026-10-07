@@ -8,7 +8,39 @@
         </button>
       </div>
 
-      <div class="card">
+      <!-- 手机端卡片列表 -->
+      <div class="sm:hidden space-y-3">
+        <div v-for="location in locations" :key="location.id" class="card p-3">
+          <router-link :to="`/locations/${location.id}`" class="block min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-medium text-lg text-gray-900 dark:text-white truncate">
+                {{ location.name }}
+              </span>
+              <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">
+                {{ formatDate(location.created_at) }}
+              </span>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+              {{ location.description || "-" }}
+            </p>
+          </router-link>
+          <div class="flex space-x-2 mt-3">
+            <router-link :to="`/locations/${location.id}`" class="btn btn-primary btn-sm flex-1">查看</router-link>
+            <button @click="editLocation(location)" class="btn btn-secondary btn-sm flex-1">编辑</button>
+            <button @click="showPrintSettings(location)" class="btn btn-secondary btn-sm flex-1">打印</button>
+            <button
+              v-if="authStore.isAdmin"
+              @click="deleteLocation(location.id)"
+              class="btn btn-danger btn-sm flex-1"
+            >
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 平板及以上表格 -->
+      <div class="card hidden sm:block">
         <div class="overflow-x-auto">
           <div class="min-w-[500px]">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
