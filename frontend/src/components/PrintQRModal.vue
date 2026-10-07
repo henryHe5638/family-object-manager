@@ -114,7 +114,7 @@
             @click.stop="close"
             class="btn btn-secondary"
           >
-            取消
+            完成
           </button>
           <button
             @click.stop="saveAsImage"
@@ -164,12 +164,35 @@ const paperSizes = [
   { name: 'label-wide', label: '宽标签', width: 100, height: 30 }
 ];
 
-const selectedPaperSize = ref('A4');
-const showTitle = ref(true);
-const showBorder = ref(false);
-const qrCodeSize = ref(200);
-const customWidth = ref(60);
-const customHeight = ref(40);
+// 打印设置持久化到 localStorage
+const SETTINGS_KEY = 'print-qr-settings';
+const loadSettings = (): Record<string, any> | null => {
+  try {
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
+  } catch {
+    return null;
+  }
+};
+const savedSettings = loadSettings();
+
+const selectedPaperSize = ref(savedSettings?.selectedPaperSize ?? 'A4');
+const showTitle = ref(savedSettings?.showTitle ?? true);
+const showBorder = ref(savedSettings?.showBorder ?? false);
+const qrCodeSize = ref(savedSettings?.qrCodeSize ?? 200);
+const customWidth = ref(savedSettings?.customWidth ?? 60);
+const customHeight = ref(savedSettings?.customHeight ?? 40);
+
+// 设置变化时自动保存
+watch([selectedPaperSize, showTitle, showBorder, qrCodeSize, customWidth, customHeight], () => {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+    selectedPaperSize: selectedPaperSize.value,
+    showTitle: showTitle.value,
+    showBorder: showBorder.value,
+    qrCodeSize: qrCodeSize.value,
+    customWidth: customWidth.value,
+    customHeight: customHeight.value,
+  }));
+});
 
 // 检测是否为桌面端（非手机和平板）
 const isDesktop = ref(false);

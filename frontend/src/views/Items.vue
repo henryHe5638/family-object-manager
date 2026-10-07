@@ -132,15 +132,27 @@
                 </span>
               </div>
               <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                {{ [item.category_name, item.brand, item.size, item.location_name, item.drawer_name].filter(Boolean).join(" · ") || "-" }}
+                {{ [item.category_name, item.brand, item.size].filter(Boolean).join(" · ") || "-" }}
               </p>
-              <p class="text-xs mt-0.5">
-                <span class="text-gray-600 dark:text-gray-400">x{{ item.quantity }}</span>
-                <span v-if="item.purchase_price" class="text-blue-600 dark:text-blue-400 ml-2">¥{{ item.purchase_price }}</span>
-                <span v-if="item.expiry_date" class="ml-2" :class="getExpiryClass(item.expiry_date)">
+              <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs mt-1.5">
+                <span class="truncate text-gray-600 dark:text-gray-400">数量 x{{ item.quantity }}</span>
+                <span
+                  class="truncate"
+                  :class="item.purchase_price ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"
+                >
+                  价格 {{ item.purchase_price ? `¥${item.purchase_price}` : "-" }}
+                </span>
+                <span class="truncate text-gray-600 dark:text-gray-400">购买 {{ item.purchase_date || "-" }}</span>
+                <span class="truncate text-gray-600 dark:text-gray-400">生产 {{ item.production_date || "-" }}</span>
+                <span class="truncate text-gray-600 dark:text-gray-400">地点 {{ item.location_name || "-" }}</span>
+                <span class="truncate text-gray-600 dark:text-gray-400">抽屉 {{ item.drawer_name || "-" }}</span>
+                <span v-if="item.creator_name" class="truncate text-gray-600 dark:text-gray-400">
+                  创建人 {{ item.creator_name }}
+                </span>
+                <span v-if="item.expiry_date" class="truncate" :class="getExpiryClass(item.expiry_date)">
                   到期 {{ item.expiry_date }}
                 </span>
-              </p>
+              </div>
             </div>
           </router-link>
           <div class="flex space-x-2 mt-3">
@@ -155,13 +167,13 @@
       <!-- 平板及以上表格 -->
       <div class="card hidden sm:block">
         <div class="overflow-x-auto scroll-thin">
-          <div class="min-w-[1300px]">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <div class="min-w-[2200px]">
+            <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th class="th-cell w-32">图片</th>
-                  <th class="th-cell sortable-th" :class="sortKey === 'name' && 'th-sorted'" @click="toggleSort('name')">名称<SortArrow :active="sortKey === 'name'" :order="sortOrder" /></th>
-                  <th class="th-cell sortable-th hidden 2xl:table-cell" :class="sortKey === 'description' && 'th-sorted'" @click="toggleSort('description')">描述<SortArrow :active="sortKey === 'description'" :order="sortOrder" /></th>
+                  <th class="th-cell w-40 sortable-th" :class="sortKey === 'name' && 'th-sorted'" @click="toggleSort('name')">名称<SortArrow :active="sortKey === 'name'" :order="sortOrder" /></th>
+                  <th class="th-cell w-52 sortable-th hidden 2xl:table-cell" :class="sortKey === 'description' && 'th-sorted'" @click="toggleSort('description')">描述<SortArrow :active="sortKey === 'description'" :order="sortOrder" /></th>
                   <th class="th-cell sortable-th hidden md:table-cell" :class="sortKey === 'category_name' && 'th-sorted'" @click="toggleSort('category_name')">类目<SortArrow :active="sortKey === 'category_name'" :order="sortOrder" /></th>
                   <th class="th-cell sortable-th hidden xl:table-cell" :class="sortKey === 'brand' && 'th-sorted'" @click="toggleSort('brand')">品牌<SortArrow :active="sortKey === 'brand'" :order="sortOrder" /></th>
                   <th class="th-cell sortable-th hidden xl:table-cell" :class="sortKey === 'size' && 'th-sorted'" @click="toggleSort('size')">大小<SortArrow :active="sortKey === 'size'" :order="sortOrder" /></th>
@@ -174,28 +186,28 @@
                   <th class="th-cell sortable-th hidden 2xl:table-cell" :class="sortKey === 'expiry_date' && 'th-sorted'" @click="toggleSort('expiry_date')">到期日期<SortArrow :active="sortKey === 'expiry_date'" :order="sortOrder" /></th>
                   <th class="th-cell sortable-th hidden md:table-cell" :class="sortKey === 'status' && 'th-sorted'" @click="toggleSort('status')">状态<SortArrow :active="sortKey === 'status'" :order="sortOrder" /></th>
                   <th class="th-cell sortable-th hidden 2xl:table-cell" :class="sortKey === 'creator_name' && 'th-sorted'" @click="toggleSort('creator_name')">创建人<SortArrow :active="sortKey === 'creator_name'" :order="sortOrder" /></th>
-                  <th class="th-cell">操作</th>
+                  <th class="th-cell w-80">操作</th>
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 <tr v-for="item in filteredAndSortedItems" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-center">
+                  <td class="px-2 py-4 text-center">
                     <router-link :to="`/items/${item.id}`" class="inline-block align-middle">
                       <img
                         v-if="item.image_data || item.image_url"
                         :src="getImageUrl(item.image_url, item.image_data)"
                         alt="物品图片"
                         title="点击查看详情"
-                        class="h-28 w-28 object-contain rounded bg-gray-100 dark:bg-gray-700"
+                        class="h-24 w-24 object-contain rounded bg-gray-100 dark:bg-gray-700"
                       />
-                      <div v-else class="h-28 w-28 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                      <div v-else class="h-24 w-24 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
                         <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </div>
                     </router-link>
                   </td>
-                  <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900 dark:text-white">
+                  <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900 dark:text-white overflow-hidden text-ellipsis">
                     <router-link :to="`/items/${item.id}`" class="hover:text-blue-600 dark:hover:text-blue-400">
                       {{ item.name }}
                     </router-link>
@@ -222,7 +234,7 @@
                     </span>
                   </td>
                   <td class="td-cell hidden 2xl:table-cell">{{ item.creator_name || "-" }}</td>
-                  <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                  <td class="px-2 py-4 whitespace-nowrap text-sm font-medium text-center overflow-hidden">
                     <!-- 桌面端：单行不换行，避免撑高行 -->
                     <div class="hidden sm:flex items-center justify-center">
                       <router-link :to="`/items/${item.id}`" class="link-btn link-primary">查看</router-link>

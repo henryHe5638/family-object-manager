@@ -37,10 +37,14 @@
               <label class="form-label">品牌</label>
               <input
                 v-model="form.brand"
-                placeholder="物品品牌（可选）"
+                list="brand-suggestions"
+                placeholder="物品品牌（可选，输入有联想）"
                 class="input mt-1"
               />
             </div>
+            <datalist id="brand-suggestions">
+              <option v-for="brand in brandSuggestions" :key="brand" :value="brand" />
+            </datalist>
             <div>
               <label class="form-label">大小</label>
               <input
@@ -163,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, nextTick, onMounted } from 'vue';
+import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue';
 import BaseModal from './BaseModal.vue';
 import CategorySelector from './CategorySelector.vue';
 import ImageUpload from './ImageUpload.vue';
@@ -191,6 +195,22 @@ const emit = defineEmits<{
 const locations = ref<any[]>([]);
 const drawers = ref<any[]>([]);
 const saving = ref(false);
+
+// 品牌联想：缓存一次全部物品，按已选类目过滤品牌
+const allItems = ref<any[]>([]);
+
+const brandSuggestions = computed(() => {
+  // 已选类目时只取该类目下的品牌，否则取全部品牌
+  const categoryId = form.item_category_id;
+  const seen = new Map<string, string>();
+  allItems.value.forEach((it: any) => {
+    if (!it.brand) return;
+    if (categoryId && it.item_category_id !== categoryId) return;
+    const key = it.brand.toString().toLowerCase();
+    if (!seen.has(key)) seen.set(key, it.brand.toString());
+  });
+  return Array.from(seen.values()).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+});
 
 const emptyForm = () => ({
   name: '',
@@ -274,6 +294,14 @@ onMounted(async () => {
     drawers.value = drawersRes.data || drawersRes;
   } catch (error) {
     console.error('加载地点/抽屉失败:', error);
+  }
+
+  // 加载物品列表用于品牌联想（缓存一次，失败不阻塞表单）
+  try {
+    const itemsRes: any = await itemApi.getAll();
+    allItems.value = itemsRes.data || itemsRes || [];
+  } catch (error) {
+    console.error('加载物品列表失败:', error);
   }
 });
 
