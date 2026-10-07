@@ -55,9 +55,22 @@
             </div>
           </div>
           <div class="flex items-center">
-            <input id="item-form-is-private" v-model="form.is_private" type="checkbox" class="checkbox" />
-            <label for="item-form-is-private" class="ml-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-              🔒 私人物品 <span class="text-gray-400 dark:text-gray-500">（勾选后仅自己可见，不勾选则所有用户可见）</span>
+            <input
+              id="item-form-is-private"
+              v-model="form.is_private"
+              type="checkbox"
+              class="checkbox"
+              :disabled="!!form.drawer_id"
+            />
+            <label
+              for="item-form-is-private"
+              class="ml-2 text-sm cursor-pointer"
+              :class="form.drawer_id ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'text-gray-700 dark:text-gray-300'"
+            >
+              🔒 私人物品
+              <span class="text-gray-400 dark:text-gray-500">
+                （勾选后仅自己可见，不勾选则所有用户可见<template v-if="form.drawer_id">；已选择抽屉，私有状态跟随抽屉</template>）
+              </span>
             </label>
           </div>
         </div>
@@ -281,6 +294,15 @@ watch(() => form.drawer_id, (drawerId) => {
   const selected = drawers.value.find((d: any) => d.id === drawerId);
   if (selected && selected.location_id) {
     form.location_id = selected.location_id;
+  }
+});
+
+// 选择抽屉后私有状态跟随抽屉（仅展示，最终以后端为准）
+watch(() => form.drawer_id, (drawerId) => {
+  if (!drawerId) return;
+  const selected = drawers.value.find((d: any) => d.id === drawerId);
+  if (selected) {
+    form.is_private = !!selected.is_private;
   }
 });
 

@@ -18,6 +18,15 @@ const canAccessItem = (item: any, req: any) =>
 const canModifyItem = (item: any, req: any) =>
   req.role === 'admin' || !item.created_by || item.created_by === req.userId;
 
+// 私有状态跟随抽屉：物品放入抽屉时，is_private 以抽屉为准；未选抽屉时用传入值
+const resolveItemPrivacy = (drawerId: any, isPrivate: any): number => {
+  if (drawerId) {
+    const drawer: any = db.prepare('SELECT is_private FROM drawers WHERE id = ?').get(drawerId);
+    if (drawer) return drawer.is_private ? 1 : 0;
+  }
+  return isPrivate ? 1 : 0;
+};
+
 // 获取所有物品（支持 ?status=stored|in_use|discarded 筛选，普通用户仅返回公开的和自己的物品）
 router.get('/', (req: any, res) => {
   try {
@@ -190,6 +199,9 @@ router.post('/', async (req: any, res) => {
     // 生成唯一的二维码字符串
     const qrCode = `ITEM-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
+    // 放入抽屉时私有状态跟随抽屉
+    const itemPrivate = resolveItemPrivacy(drawer_id, is_private);
+
     const result = db.prepare(`
       INSERT INTO items (
         name, description, brand, size, item_category_id, location_id, drawer_id,
@@ -208,7 +220,7 @@ router.post('/', async (req: any, res) => {
       purchase_price || null,
       expiry_date || null,
       quantity || 1,
-      is_private ? 1 : 0,
+      itemPrivate,
       image_url || null,
       image_data || null,
       qrCode,
@@ -271,6 +283,9 @@ router.put('/:id', (req: any, res) => {
       return res.status(403).json({ error: '无权修改该物品' });
     }
 
+    // 放入/移入抽屉时私有状态跟随抽屉；未选抽屉时用传入值
+    const itemPrivate = resolveItemPrivacy(drawer_id, is_private);
+
     const result = db.prepare(`
       UPDATE items 
       SET name = ?, description = ?, brand = ?, size = ?, item_category_id = ?, location_id = ?, drawer_id = ?,
@@ -291,7 +306,7 @@ router.put('/:id', (req: any, res) => {
       purchase_price || null,
       expiry_date || null,
       quantity,
-      is_private ? 1 : 0,
+      itemPrivate,
       image_url || null,
       image_data || null,
       status || existing.status || 'stored',

@@ -223,6 +223,16 @@ router.put('/:id', (req: any, res) => {
       `).run(location_id, id);
     }
 
+    // 抽屉私有状态变化时，级联同步抽屉内所有物品的私有状态
+    const newPrivate = is_private ? 1 : 0;
+    if (oldDrawer && oldDrawer.is_private !== newPrivate) {
+      db.prepare(`
+        UPDATE items
+        SET is_private = ?
+        WHERE drawer_id = ?
+      `).run(newPrivate, id);
+    }
+
     res.json({ message: '抽屉更新成功' });
   } catch (error) {
     console.error('更新抽屉错误:', error);

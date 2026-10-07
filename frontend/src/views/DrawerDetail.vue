@@ -118,13 +118,23 @@
         </div>
       </div>
 
-      <!-- 二维码弹窗（复用打印二维码弹窗，支持下载 PNG/打印） -->
-      <PrintQRModal
-        :visible="showQR"
-        :qr-code-image="qrCodeImage"
-        :title="`${drawer?.name || ''} 的二维码`"
+      <!-- 二维码弹窗（与抽屉列表页一致，复用 QRCodeDisplay） -->
+      <BaseModal
+        :show="showQR"
+        :title="`${drawer?.name} 的二维码`"
+        max-width="max-w-md"
         @close="showQR = false"
-      />
+      >
+        <QRCodeDisplay
+          v-if="showQR"
+          :item-id="Number(route.params.id)"
+          :item-name="drawer?.name"
+          item-type="drawer"
+        />
+        <div class="flex justify-end mt-4">
+          <button type="button" @click="showQR = false" class="btn btn-secondary">关闭</button>
+        </div>
+      </BaseModal>
 
       <!-- 批量添加物品弹窗 -->
       <BaseModal
@@ -224,26 +234,17 @@ import { useRoute } from 'vue-router';
 import Layout from '../components/Layout.vue';
 import BaseModal from '../components/BaseModal.vue';
 import ItemFormModal from '../components/ItemFormModal.vue';
-import PrintQRModal from '../components/PrintQRModal.vue';
+import QRCodeDisplay from '../components/QRCodeDisplay.vue';
 import { drawerApi, itemApi } from '../api/modules';
 
 const route = useRoute();
 const drawer = ref<any>(null);
 const items = ref<any[]>([]);
 const showQR = ref(false);
-const qrCodeImage = ref('');
 
-// 打开二维码弹窗并加载二维码（复用打印二维码弹窗，数据现取）
-const openQR = async () => {
-  qrCodeImage.value = '';
-  try {
-    const res: any = await drawerApi.getQRCode(Number(route.params.id));
-    qrCodeImage.value = res.qrCodeImage || res.data?.qrCodeImage || '';
-    showQR.value = true;
-  } catch (error) {
-    console.error('加载二维码失败:', error);
-    alert('加载二维码失败');
-  }
+// 打开二维码弹窗（QRCodeDisplay 内部通过 drawerApi.getQRCode 现取二维码）
+const openQR = () => {
+  showQR.value = true;
 };
 
 // 物品状态展示配置

@@ -307,7 +307,10 @@
                 </span>
               </div>
               <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                {{ item.category_name || "-" }}
+                {{ [item.category_name, item.brand, item.size].filter(Boolean).join(" · ") || "-" }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                {{ [item.location_name, item.drawer_name].filter(Boolean).join(" · ") || "-" }}
               </p>
               <div class="mt-2 flex items-center justify-between text-xs">
                 <span class="text-gray-600 dark:text-gray-400">x{{ item.quantity }}</span>
