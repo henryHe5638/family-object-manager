@@ -100,10 +100,14 @@ router.get('/:id/qrcode', async (req, res) => {
     }
 
     const qrCodeImage = await generateQRCodeImage(Number(id));
-    
+
+    const setting: any = db.prepare('SELECT value FROM settings WHERE key = ?').get('site_url');
+    const siteUrl = setting ? setting.value : 'http://localhost:5174';
+
     res.json({
       qrCodeImage,
-      drawerName: drawer.name
+      drawerName: drawer.name,
+      url: `${siteUrl}/drawers/${id}`
     });
   } catch (error) {
     console.error('获取抽屉二维码错误:', error);

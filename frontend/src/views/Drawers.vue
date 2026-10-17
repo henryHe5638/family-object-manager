@@ -65,11 +65,27 @@
         </div>
       </div>
 
+      <!-- 批量操作栏 -->
+      <div v-if="selectedIds.size > 0" class="card px-4 py-3 mt-3 flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-gray-900 dark:text-white">已选 {{ selectedIds.size }} 项</span>
+        <button @click="toggleSelectAll" class="btn btn-secondary btn-sm">全选</button>
+        <button @click="openBatchPrint" class="btn btn-primary btn-sm">批量打印</button>
+        <button v-if="authStore.isAdmin" @click="batchDeleteDialog?.show()" class="btn btn-danger btn-sm">批量删除</button>
+        <button @click="clearSelection" class="btn btn-ghost btn-sm">清空选择</button>
+      </div>
+
       <!-- 列表视图 -->
       <!-- 手机端卡片列表 -->
       <div v-if="viewMode === 'list'" class="sm:hidden space-y-3">
         <div v-for="drawer in filteredAndSortedDrawers" :key="drawer.id" class="card p-3">
-          <router-link :to="`/drawers/${drawer.id}`" class="flex items-start gap-3">
+          <div class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              class="checkbox shrink-0"
+              :checked="selectedIds.has(drawer.id)"
+              @change="toggleSelect(drawer.id)"
+            />
+            <router-link :to="`/drawers/${drawer.id}`" class="flex items-start gap-3 flex-1 min-w-0">
             <img
               v-if="drawer.image_url"
               :src="getImageUrl(drawer.image_url)"
@@ -96,6 +112,7 @@
               </p>
             </div>
           </router-link>
+          </div>
           <div class="flex space-x-2 mt-3">
             <router-link :to="`/drawers/${drawer.id}`" class="btn btn-primary btn-sm flex-1">查看</router-link>
             <button @click="showQRCode(drawer)" class="btn btn-secondary btn-sm flex-1">二维码</button>
@@ -118,6 +135,15 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                  <th class="th-cell w-10 !px-2">
+                    <input
+                      type="checkbox"
+                      class="checkbox"
+                      :checked="allVisibleSelected"
+                      @change="toggleSelectAll"
+                      title="全选"
+                    />
+                  </th>
                   <th class="th-cell">图片</th>
                   <th class="th-cell">名称</th>
                   <th class="th-cell hidden md:table-cell">描述</th>
@@ -127,6 +153,14 @@
               </thead>
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 <tr v-for="drawer in filteredAndSortedDrawers" :key="drawer.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td class="px-2 py-4 text-center">
+                    <input
+                      type="checkbox"
+                      class="checkbox"
+                      :checked="selectedIds.has(drawer.id)"
+                      @change="toggleSelect(drawer.id)"
+                    />
+                  </td>
                   <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-center">
                     <router-link :to="`/drawers/${drawer.id}`" class="inline-block align-middle">
                       <img
@@ -311,6 +345,22 @@
         type="danger"
         @confirm="confirmDelete"
       />
+
+      <!-- 批量删除对话框 -->
+      <ConfirmDialog
+        ref="batchDeleteDialog"
+        title="批量删除抽屉"
+        :message="`确定要删除选中的 ${selectedIds.size} 个抽屉吗？删除后无法恢复。`"
+        type="danger"
+        @confirm="confirmBatchDelete"
+      />
+
+      <!-- 批量打印设置弹窗 -->
+      <BatchPrintModal
+        :show="showPrintModal"
+        :selection="printSelection"
+        @close="showPrintModal = false"
+      />
     </div>
   </Layout>
 </template>
@@ -324,6 +374,8 @@ import { useAuthStore } from "../stores/auth";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import ImageUpload from "../components/ImageUpload.vue";
 import QRCodeDisplay from "../components/QRCodeDisplay.vue";
+import BatchPrintModal from "../components/BatchPrintModal.vue";
+import type { PrintSelection } from "../utils/batchPrint";
 
 const authStore = useAuthStore();
 
@@ -355,8 +407,74 @@ const loadData = async () => {
 
     drawers.value = drawersRes.data || drawersRes;
     locations.value = locationsRes.data || locationsRes;
+    selectedIds.value = new Set();
   } catch (error) {
     console.error("加载数据失败:", error);
+  }
+};
+
+// ---------- 批量选择 ----------
+const selectedIds = ref<Set<number>>(new Set());
+
+const toggleSelect = (id: number) => {
+  const s = new Set(selectedIds.value);
+  s.has(id) ? s.delete(id) : s.add(id);
+  selectedIds.value = s;
+};
+
+const allVisibleSelected = computed(
+  () =>
+    filteredAndSortedDrawers.value.length > 0 &&
+    filteredAndSortedDrawers.value.every((d: any) => selectedIds.value.has(d.id))
+);
+
+const toggleSelectAll = () => {
+  const s = new Set(selectedIds.value);
+  if (allVisibleSelected.value) {
+    filteredAndSortedDrawers.value.forEach((d: any) => s.delete(d.id));
+  } else {
+    filteredAndSortedDrawers.value.forEach((d: any) => s.add(d.id));
+  }
+  selectedIds.value = s;
+};
+
+const clearSelection = () => {
+  selectedIds.value = new Set();
+};
+
+// ---------- 批量打印 ----------
+const showPrintModal = ref(false);
+
+const printSelection = computed<PrintSelection[]>(() =>
+  filteredAndSortedDrawers.value
+    .filter((d: any) => selectedIds.value.has(d.id))
+    .map((d: any) => ({
+      kind: 'drawer' as const,
+      id: d.id,
+      name: d.name,
+      subtitle: d.location_name ? `抽屉 · ${d.location_name}` : '抽屉',
+    }))
+);
+
+const openBatchPrint = () => {
+  if (printSelection.value.length === 0) return;
+  showPrintModal.value = true;
+};
+
+// ---------- 批量删除（管理员） ----------
+const batchDeleteDialog = ref<InstanceType<typeof ConfirmDialog>>();
+
+const confirmBatchDelete = async () => {
+  const ids = [...selectedIds.value];
+  try {
+    for (const id of ids) {
+      await drawerApi.delete(id);
+    }
+    await loadData();
+  } catch (error) {
+    console.error("批量删除失败:", error);
+    alert("批量删除失败");
+    await loadData();
   }
 };
 
@@ -478,34 +596,6 @@ const showQRCode = (drawer: any) => {
 
 const closeQRModal = () => {
   qrCodeModal.value = null;
-};
-
-// 保留原有的打印方法作为备用
-const printQRCode = () => {
-  if (qrCodeModal.value?.qrCodeImage) {
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      const html = `
-        <html>
-          <head>
-            <title>打印二维码 - ${qrCodeModal.value.name}</title>
-            <style>
-              body { text-align: center; padding: 20px; }
-              img { max-width: 400px; }
-              h2 { margin-bottom: 20px; }
-            </style>
-          </head>
-          <body>
-            <h2>${qrCodeModal.value.name}</h2>
-            <img src="${qrCodeModal.value.qrCodeImage}" />
-          </body>
-        </html>
-      `;
-      printWindow.document.write(html);
-      printWindow.document.close();
-      setTimeout(() => printWindow.print(), 100);
-    }
-  }
 };
 
 // 获取图片完整 URL

@@ -5,7 +5,9 @@
         <div class="flex justify-between h-16">
           <div class="flex items-center min-w-0">
             <div class="flex-shrink-0 flex items-center">
-              <h1 class="text-sm sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white truncate">家庭物资管理</h1>
+              <router-link to="/" class="hover:opacity-80 transition-opacity">
+                <h1 class="text-sm sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white truncate">家庭物资管理</h1>
+              </router-link>
             </div>
             <div class="hidden lg:ml-6 lg:flex lg:space-x-6 xl:space-x-8 overflow-x-auto">
               <router-link

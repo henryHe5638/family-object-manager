@@ -86,76 +86,12 @@ const loadQRCode = async () => {
   }
 };
 
-const downloadQRCode = () => {
-  if (!qrCodeData.value?.qrCodeImage) return;
-  
-  const link = document.createElement('a');
-  link.href = qrCodeData.value.qrCodeImage;
-  link.download = `qrcode-${props.itemName || props.itemId}.png`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
-
 const showPrintModal = () => {
   printModalVisible.value = true;
 };
 
 const closePrintModal = () => {
   printModalVisible.value = false;
-};
-
-// 保留原有的打印方法作为备用
-const printQRCode = () => {
-  if (!qrCodeData.value?.qrCodeImage) return;
-  
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    alert('请允许弹出窗口以打印二维码');
-    return;
-  }
-  
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>打印二维码 - ${props.itemName || props.itemId}</title>
-        <style>
-          body {
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: Arial, sans-serif;
-          }
-          img {
-            max-width: 300px;
-            margin: 20px 0;
-          }
-          h2 {
-            margin: 10px 0;
-          }
-          @media print {
-            body {
-              padding: 0;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <h2>${props.itemName || '物品'}</h2>
-        <img src="${qrCodeData.value.qrCodeImage}" alt="二维码" />
-        <p>扫码查看物品详情</p>
-      </body>
-    </html>
-  `);
-  
-  printWindow.document.close();
-  
-  setTimeout(() => {
-    printWindow.print();
-  }, 250);
 };
 
 onMounted(() => {

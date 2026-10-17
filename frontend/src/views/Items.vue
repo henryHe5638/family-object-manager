@@ -104,12 +104,28 @@
         </div>
       </div>
 
+      <!-- 批量操作栏 -->
+      <div v-if="selectedIds.size > 0" class="card px-4 py-3 mt-3 flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-gray-900 dark:text-white">已选 {{ selectedIds.size }} 项</span>
+        <button @click="toggleSelectAll" class="btn btn-secondary btn-sm">全选</button>
+        <button @click="openBatchPrint" class="btn btn-primary btn-sm">批量打印</button>
+        <button @click="batchDeleteDialog?.show()" class="btn btn-danger btn-sm">批量删除</button>
+        <button @click="clearSelection" class="btn btn-ghost btn-sm">清空选择</button>
+      </div>
+
       <!-- 列表视图：手机端卡片 / 平板及以上表格 -->
       <template v-if="viewMode === 'list'">
       <!-- 手机端卡片列表 -->
       <div class="sm:hidden space-y-3">
         <div v-for="item in filteredAndSortedItems" :key="item.id" class="card p-3">
-          <router-link :to="`/items/${item.id}`" class="flex items-start gap-3">
+          <div class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              class="checkbox shrink-0"
+              :checked="selectedIds.has(item.id)"
+              @change="toggleSelect(item.id)"
+            />
+            <router-link :to="`/items/${item.id}`" class="flex items-start gap-3 flex-1 min-w-0">
             <img
               v-if="item.image_data || item.image_url"
               :src="getImageUrl(item.image_url, item.image_data)"
@@ -155,6 +171,7 @@
               </div>
             </div>
           </router-link>
+          </div>
           <div class="flex space-x-2 mt-3">
             <router-link :to="`/items/${item.id}`" class="btn btn-primary btn-sm flex-1">查看</router-link>
             <button @click="showItemQRCode(item)" class="btn btn-secondary btn-sm flex-1">二维码</button>
@@ -171,6 +188,15 @@
             <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                  <th class="th-cell w-10 !px-2">
+                    <input
+                      type="checkbox"
+                      class="checkbox"
+                      :checked="allVisibleSelected"
+                      @change="toggleSelectAll"
+                      title="全选"
+                    />
+                  </th>
                   <th class="th-cell w-32">图片</th>
                   <th class="th-cell w-40 sortable-th" :class="sortKey === 'name' && 'th-sorted'" @click="toggleSort('name')">名称<SortArrow :active="sortKey === 'name'" :order="sortOrder" /></th>
                   <th class="th-cell w-52 sortable-th hidden 2xl:table-cell" :class="sortKey === 'description' && 'th-sorted'" @click="toggleSort('description')">描述<SortArrow :active="sortKey === 'description'" :order="sortOrder" /></th>
@@ -191,6 +217,14 @@
               </thead>
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 <tr v-for="item in filteredAndSortedItems" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td class="px-2 py-4 text-center">
+                    <input
+                      type="checkbox"
+                      class="checkbox"
+                      :checked="selectedIds.has(item.id)"
+                      @change="toggleSelect(item.id)"
+                    />
+                  </td>
                   <td class="px-2 py-4 text-center">
                     <router-link :to="`/items/${item.id}`" class="inline-block align-middle">
                       <img
@@ -349,6 +383,22 @@
         @confirm="confirmDelete"
       />
 
+      <!-- 批量删除对话框 -->
+      <ConfirmDialog
+        ref="batchDeleteDialog"
+        title="批量删除物品"
+        :message="`确定要删除选中的 ${selectedIds.size} 个物品吗？删除后无法恢复。`"
+        type="danger"
+        @confirm="confirmBatchDelete"
+      />
+
+      <!-- 批量打印设置弹窗 -->
+      <BatchPrintModal
+        :show="showPrintModal"
+        :selection="printSelection"
+        @close="showPrintModal = false"
+      />
+
       <!-- 确认丢弃对话框 -->
       <ConfirmDialog
         ref="discardDialog"
@@ -386,6 +436,8 @@ import ItemFormModal from "../components/ItemFormModal.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { itemApi, locationApi, drawerApi } from "../api/modules";
 import QRCodeDisplay from "../components/QRCodeDisplay.vue";
+import BatchPrintModal from "../components/BatchPrintModal.vue";
+import type { PrintSelection } from "../utils/batchPrint";
 import { h, defineComponent } from "vue";
 
 // 表头排序箭头指示器
@@ -479,8 +531,74 @@ const loadData = async () => {
     items.value = itemsRes.data || itemsRes;
     locations.value = locationsRes.data || locationsRes;
     drawers.value = drawersRes.data || drawersRes;
+    selectedIds.value = new Set();
   } catch (error) {
     console.error("加载数据失败:", error);
+  }
+};
+
+// ---------- 批量选择 ----------
+const selectedIds = ref<Set<number>>(new Set());
+
+const toggleSelect = (id: number) => {
+  const s = new Set(selectedIds.value);
+  s.has(id) ? s.delete(id) : s.add(id);
+  selectedIds.value = s;
+};
+
+const allVisibleSelected = computed(
+  () =>
+    filteredAndSortedItems.value.length > 0 &&
+    filteredAndSortedItems.value.every((item: any) => selectedIds.value.has(item.id))
+);
+
+const toggleSelectAll = () => {
+  const s = new Set(selectedIds.value);
+  if (allVisibleSelected.value) {
+    filteredAndSortedItems.value.forEach((item: any) => s.delete(item.id));
+  } else {
+    filteredAndSortedItems.value.forEach((item: any) => s.add(item.id));
+  }
+  selectedIds.value = s;
+};
+
+const clearSelection = () => {
+  selectedIds.value = new Set();
+};
+
+// ---------- 批量打印 ----------
+const showPrintModal = ref(false);
+
+const printSelection = computed<PrintSelection[]>(() =>
+  filteredAndSortedItems.value
+    .filter((item: any) => selectedIds.value.has(item.id))
+    .map((item: any) => ({
+      kind: 'item' as const,
+      id: item.id,
+      name: item.name,
+      subtitle: [item.category_name, item.drawer_name || item.location_name].filter(Boolean).join(' · '),
+    }))
+);
+
+const openBatchPrint = () => {
+  if (printSelection.value.length === 0) return;
+  showPrintModal.value = true;
+};
+
+// ---------- 批量删除 ----------
+const batchDeleteDialog = ref<InstanceType<typeof ConfirmDialog>>();
+
+const confirmBatchDelete = async () => {
+  const ids = [...selectedIds.value];
+  try {
+    for (const id of ids) {
+      await itemApi.delete(id);
+    }
+    await loadData();
+  } catch (error) {
+    console.error("批量删除失败:", error);
+    alert("批量删除失败");
+    await loadData();
   }
 };
 
